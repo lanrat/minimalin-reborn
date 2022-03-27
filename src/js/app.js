@@ -120,7 +120,7 @@ Pebble.addEventListener('ready', function (e) {
 
 
 Pebble.addEventListener('showConfiguration', function() {
-  var URL = 'https://lanrat.github.io/minimalin/';
+  var URL = 'https://lanrat.github.io/minimalin-reborn/';
   var config = Config('config');
   var params = config.load();
   params.platform = Pebble.getActiveWatchInfo().platform;

@@ -1,6 +1,6 @@
 {
-  "version": "1.7.0",
-  "author": "Gringer Apps",
+  "version": "2.0.0",
+  "author": "lanrat",
   "private": true,
   "dependencies": {},
   "keywords": [
@@ -30,7 +30,7 @@
       ]
     },
     "projectType": "native",
-    "uuid": "341a9f39-53b5-4db9-ae50-78e7dd68e544",
+    "uuid": "e8e629e5-bdc8-4a51-be35-1ffbfbc149e0",
     "messageKeys": {
       "AppKeyMinuteHandColor": 0,
       "AppKeyHourHandColor": 1,
@@ -55,7 +55,7 @@
       "AppKeyBatteryDisplayedAt": 20
     },
     "enableMultiJS": false,
-    "displayName": "Minimalin",
+    "displayName": "Minimalin Reborn",
     "watchapp": {
       "onlyShownOnCommunication": false,
       "hiddenApp": false,
@@ -73,5 +73,5 @@
       "health"
     ]
   },
-  "name": "Minimalin"
+  "name": "Minimalin Reborn"
 }
