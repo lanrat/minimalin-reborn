@@ -56,4 +56,7 @@ timeline-off:
 wipe:
 	pebble wipe
 
+docker:
+	docker run --rm -it --name rebble-build -v $(shell pwd):/pebble/ --workdir /pebble/ rebble/pebble-sdk make build
+
 .PHONY: all build config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs
