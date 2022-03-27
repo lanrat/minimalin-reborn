@@ -22,7 +22,7 @@ var Config = function(name){
 var Weather = function(pebble){
   var METHOD = 'GET';
   var BASE_URL = 'http://api.openweathermap.org/data/2.5/weather';
-  var API_ID = 'b8c060512b6a117879f2636c41bbb67b';
+  var API_ID = '745caedce30fb57ee9a045e21aba1953';
   var ICONS = {
     '01d': 'a',
     '02d': 'b',
