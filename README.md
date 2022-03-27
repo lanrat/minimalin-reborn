@@ -1,6 +1,8 @@
-# minimalin ![Travis build](https://api.travis-ci.org/groyoh/minimalin.svg?branch=master)
+# minimalin reborn
 
 [![banner](design/store/marketing-banner.png)](https://apps.getpebble.com/en_US/application/56f93a5361a01637e5000036)
+
+Updated fork based on the origional minimalin watchface from [GringerApps](https://github.com/GringerApps/minimalin).
 
 Minimalin is a fully customizable watchface that blends analog and digital for a modern and elegant look. <br><br>
 Minimalin uses Nupe, a custom font with numbers and icons, optimized with bitmap mapping to perfectly fit the pixel grid of the Pebble watch.
@@ -14,9 +16,9 @@ Some key features of Minimalin:
 * Bluetooth disconnected icon (pick your favorite)
 * Rainbow hand :rainbow:
 
-Go and grab it [here](https://apps.getpebble.com/en_US/application/56f93a5361a01637e5000036).
+~~Go and grab it [here](https://store-beta.rebble.io/app/56f93a5361a01637e5000036).~~
 
-[![Preview](design/minimalin_preview.png)](https://apps.getpebble.com/en_US/application/56f93a5361a01637e5000036)
+![Preview](design/minimalin_preview.png)
 
 ## License
 
@@ -39,5 +41,3 @@ This way we'll be able to discuss the idea and see if it matches our vision befo
 ## Credits
 
 Thanks to [OpenWeatherMap](http://openweathermap.org/) for providing us with a free API key.
-
-Many thanks to [RawGit](https://rawgit.com/) for providing a free CDN for projects hosted on Github. You're awesome!
