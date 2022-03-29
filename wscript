@@ -25,6 +25,12 @@ def options(ctx):
     ctx.load('pebble_sdk')
 
 def configure(ctx):
+    """
+    This method is used to configure your build. ctx.load(`pebble_sdk`) automatically configures
+    a build for each valid platform in `targetPlatforms`. Platform-specific configuration: add your
+    change after calling ctx.load('pebble_sdk') and make sure to set the correct environment first.
+    Universal configuration: add your change prior to calling ctx.load('pebble_sdk').
+    """
     fetch_conf(ctx, 'SCREENSHOT')
     fetch_conf(ctx, 'NO_BT')
     fetch_conf(ctx, 'CONFIG_BLUETOOTH_ICON')
@@ -34,6 +40,7 @@ def configure(ctx):
     fetch_conf(ctx, 'CONFIG_TEMPERATURE_UNIT')
     fetch_conf(ctx, 'CONFIG_MILITARY_TIME')
     ctx.load('pebble_sdk')
+    ctx.env.BUNDLE_NAME = "minimalin-reborn.pbw"
 
 def build(ctx):
     if False and hint is not None:

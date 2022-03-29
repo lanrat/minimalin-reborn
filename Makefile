@@ -16,7 +16,6 @@ init_overlays:
 
 build: weather-api init_overlays
 	pebble build
-	mv build/pebble.pbw build/minimalin-reborn.pbw
 
 weather-api:
 	@echo "var API_ID = '$(OPENWEATHERMAP_API_KEY)';" > src/js/weather_id.js
