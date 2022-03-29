@@ -37,3 +37,7 @@ build/
 
 # Misc
 screenshots
+resources/data/
+
+# keys
+src/js/weather_id.js

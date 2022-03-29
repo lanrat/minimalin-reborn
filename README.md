@@ -18,6 +18,8 @@ Some key features of Minimalin:
 
 ~~Go and grab it [here](https://store-beta.rebble.io/app/56f93a5361a01637e5000036).~~
 
+[Test releases here!](https://github.com/lanrat/minimalin-reborn/releases)
+
 ![Preview](design/minimalin_preview.png)
 
 ## License

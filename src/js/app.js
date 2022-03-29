@@ -22,7 +22,6 @@ var Config = function(name){
 var Weather = function(pebble){
   var METHOD = 'GET';
   var BASE_URL = 'http://api.openweathermap.org/data/2.5/weather';
-  var API_ID = 'b8c060512b6a117879f2636c41bbb67b';
   var ICONS = {
     '01d': 'a',
     '02d': 'b',
@@ -63,6 +62,10 @@ var Weather = function(pebble){
   }
 
   var fetchWeather = function(query) {
+    if (!API_ID || API_ID.length == 0) {
+      console.error("no weather API key");
+      Pebble.sendAppMessage({ 'AppKeyWeatherFailed': 1 });
+    }
     var req = new XMLHttpRequest();
     query += '&cnt=1&appid=' + API_ID;
     req.open(METHOD, BASE_URL + '?' + query, true);
@@ -78,8 +81,10 @@ var Weather = function(pebble){
             'AppKeyWeatherIcon': icon,
             'AppKeyWeatherTemperature': temperature
           };
+          //console.log('fetchWeather sendAppMessage:', JSON.stringify(data));
           Pebble.sendAppMessage(data);
         } else {
+          //console.log('error: fetchWeather AppKeyWeatherFailed:', JSON.stringify(req));
           Pebble.sendAppMessage({ 'AppKeyWeatherFailed': 1 });
         }
       }
@@ -88,11 +93,13 @@ var Weather = function(pebble){
   }
 
   var locationSuccess = function(pos) {
+    //console.log('AppKeyWeatherFailed: locationSuccess');
     var coordinates = pos.coords;
     fetchWeatherForCoordinates(coordinates.latitude, coordinates.longitude);
   }
 
   var locationError = function(err) {
+    //console.log('error: AppKeyWeatherFailed: locationError');
     pebble.sendAppMessage({
       'AppKeyWeatherFailed': 0
     });
@@ -100,6 +107,7 @@ var Weather = function(pebble){
 
   pebble.addEventListener('appmessage', function (e) {
     var dict = e.payload;
+    //console.log('appmessage:', JSON.stringify(dict));
     if(dict['AppKeyWeatherRequest']) {
       var config = Config('config');
       var location = config.load().location;
@@ -120,7 +128,7 @@ Pebble.addEventListener('ready', function (e) {
 
 
 Pebble.addEventListener('showConfiguration', function() {
-  var URL = 'https://lanrat.github.io/minimalin/';
+  var URL = 'https://lanrat.github.io/minimalin-reborn/';
   var config = Config('config');
   var params = config.load();
   params.platform = Pebble.getActiveWatchInfo().platform;
