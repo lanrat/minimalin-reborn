@@ -1,10 +1,11 @@
 # minimalin reborn
 
-[![banner](design/store/marketing-banner.png)](https://apps.getpebble.com/en_US/application/56f93a5361a01637e5000036)
+[![banner](design/store/marketing-banner.png)](https://apps.rebble.io/en_US/application/63792649c6c24a000a815e70)
 
 Updated fork based on the original minimalin watchface from [GringerApps](https://github.com/GringerApps/minimalin).
 
-Minimalin is a fully customizable watchface that blends analog and digital for a modern and elegant look. <br><br>
+Minimalin is a fully customizable watchface that blends analog and digital for a modern and elegant look.
+
 Minimalin uses Nupe, a custom font with numbers and icons, optimized with bitmap mapping to perfectly fit the pixel grid of the Pebble watch.
 
 Some key features of Minimalin:
@@ -16,9 +17,9 @@ Some key features of Minimalin:
 * Bluetooth disconnected icon (pick your favorite)
 * Rainbow hand :rainbow:
 
-~~Go and grab it [here](https://store-beta.rebble.io/app/56f93a5361a01637e5000036).~~
+Go and grab it [here](https://apps.rebble.io/en_US/application/63792649c6c24a000a815e70).
 
-[Test releases here!](https://github.com/lanrat/minimalin-reborn/releases)
+[Test releases here](https://github.com/lanrat/minimalin-reborn/releases)
 
 ![Preview](design/minimalin_preview.png)
 
@@ -33,7 +34,8 @@ Some key features of Minimalin:
 * [Slate](https://github.com/pebble/slate/blob/master/LICENSE)
 
 ## Contributing
-If you would like a new feature, please comment on https://github.com/groyoh/minimalin/issues/69 and we'll see what we can do.
+
+If you would like a new feature, please [open an issue here](https://github.com/lanrat/minimalin-reborn/issues) and we'll see what we can do.
 
 If you would like to contribute, that's awesome! But we would like you to follow these rules:
 
