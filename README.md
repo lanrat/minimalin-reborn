@@ -2,7 +2,7 @@
 
 [![banner](design/store/marketing-banner.png)](https://apps.getpebble.com/en_US/application/56f93a5361a01637e5000036)
 
-Updated fork based on the origional minimalin watchface from [GringerApps](https://github.com/GringerApps/minimalin).
+Updated fork based on the original minimalin watchface from [GringerApps](https://github.com/GringerApps/minimalin).
 
 Minimalin is a fully customizable watchface that blends analog and digital for a modern and elegant look. <br><br>
 Minimalin uses Nupe, a custom font with numbers and icons, optimized with bitmap mapping to perfectly fit the pixel grid of the Pebble watch.
