@@ -5,6 +5,8 @@ on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [master, test, dev]
+    tags:
+      - 'v*.*.*'
   pull_request:
     branches: [master]
 
@@ -22,8 +24,15 @@ jobs:
         env:
           OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
         run: make docker-build
-      - name: Upload PBW
+      - name: Upload PBW to Action
         uses: actions/upload-artifact@v2
         with:
           name: minimalin-reborn
           path: ${{ github.workspace }}/build/*.pbw
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          generate_release_notes: true
+          files: |
+            ${{ github.workspace }}/build/*.pbw
