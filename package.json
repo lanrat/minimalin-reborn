@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
+  "version": "2.1.1",
   "author": "lanrat",
   "private": true,
   "dependencies": {},
@@ -23,13 +23,13 @@
         },
         {
           "type": "font",
-          "characterRegex": "[0-9:\u00b0a-izA-IZk.yw\\-]",
+          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
           "name": "FONT_NUPE_23",
           "file": "fonts/nupe.ttf"
         },
         {
           "type": "font",
-          "characterRegex": "[0-9:\u00b0a-izA-IZk.yw\\-]",
+          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
           "name": "FONT_NUPE_28",
           "file": "fonts/nupe.ttf"
         }
