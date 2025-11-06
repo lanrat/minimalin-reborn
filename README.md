@@ -42,6 +42,32 @@ If you would like to contribute, that's awesome! But we would like you to follow
 Check if an issue is already created for the issue/feature that you'd like to work on. If you'd like to work on a feature, please create an issue first and describe what you'd like to do. If your changes impact the design of the watchface or the configuration page, please provide designs and/or screenshots of your idea.
 This way we'll be able to discuss the idea and see if it matches our vision before working on a PR.
 
+## Development
+
+### Creating a Release
+
+To create a new tagged GitHub release:
+
+**Important**: Pebble apps require versions in `X.Y.0` format (patch must be 0). Use minor version bumps only.
+
+```bash
+# 1. Update version in package.json (e.g., 2.1.0 → 2.2.0)
+# Make sure patch version is always .0
+
+# 2. Build to verify
+make build
+
+# 3. Commit the version bump
+git add package.json
+git commit -m "Bump version to X.Y.0"
+
+# 4. Create and push the tag
+git tag -a vX.Y.0 -m "Version X.Y.0"
+git push && git push --tags
+
+# The GitHub Action will automatically build and create the release with the .pbw file
+```
+
 ## Credits
 
 Thanks to [OpenWeatherMap](http://openweathermap.org/) for providing us with a free API key.
