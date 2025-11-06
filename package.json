@@ -26,6 +26,12 @@
           "characterRegex": "[0-9:\u00b0a-izA-IZk.yw\\-]",
           "name": "FONT_NUPE_23",
           "file": "fonts/nupe.ttf"
+        },
+        {
+          "type": "font",
+          "characterRegex": "[0-9:\u00b0a-izA-IZk.yw\\-]",
+          "name": "FONT_NUPE_28",
+          "file": "fonts/nupe.ttf"
         }
       ]
     },
