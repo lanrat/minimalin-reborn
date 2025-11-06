@@ -15,6 +15,12 @@
 		"apt": "sudo apt update && sudo apt install -y libsdl2-dev",
 		"pebble-tool": "curl -LsSf https://astral.sh/uv/install.sh | sh && uv tool install pebble-tool && pebble sdk install latest"
 	},
+	"remoteEnv": {
+		"LOCALWORKSPACEFOLDERBASENAME": "${localWorkspaceFolderBasename}",
+		"LOCALWORKSPACEFOLDER": "${localWorkspaceFolder}",
+		"CONTAINERWORKSPACEFOLDER": "${containerWorkspaceFolder}",
+		"CONTAINERWORKSPACEFOLDERBASENAME": "${containerWorkspaceFolderBasename}"
+	},
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -27,12 +33,6 @@
 				"workbench.welcomePage.walkthroughs.openOnInstall": false,
 				"git.openRepositoryInParentFolders": "always"
 			}
-		},
-		"remoteEnv": {
-			"LOCALWORKSPACEFOLDERBASENAME": "${localWorkspaceFolderBasename}",
-			"LOCALWORKSPACEFOLDER": "${localWorkspaceFolder}",
-			"CONTAINERWORKSPACEFOLDER": "${containerWorkspaceFolder}",
-			"CONTAINERWORKSPACEFOLDERBASENAME": "${containerWorkspaceFolderBasename}"
 		}
 	}
 }
