@@ -1,7 +1,4 @@
 
-# platform
-#P="chalk"
-
 VERSION=$(shell cat package.json | grep version | grep -o "[0-9][0-9]*\.[0-9][0-9]*")
 NAME=$(shell cat package.json | grep '"name":' | head -1 | sed 's/,//g' |sed 's/"//g' | awk '{ print $2 }')
 
@@ -18,7 +15,7 @@ build: weather-api init_overlays
 	pebble build
 
 weather-api:
-	@echo "var API_ID = '$(OPENWEATHERMAP_API_KEY)';" > src/js/weather_id.js
+	@echo "var API_ID = '$(OPENWEATHERMAP_API_KEY)';" > src/pkjs/weather_id.js
 
 config:
 	pebble emu-app-config --emulator $(PEBBLE_EMULATOR)
@@ -31,7 +28,7 @@ install:
 
 clean:
 	pebble clean
-	rm src/js/weather_id.js
+	rm src/pkjs/weather_id.js
 
 size:
 	pebble analyze-size
@@ -56,11 +53,5 @@ timeline-off:
 
 wipe:
 	pebble wipe
-
-docker-build:
-	docker run --rm --name rebble-build -v $(shell pwd):/pebble/ --workdir /pebble/ -e OPENWEATHERMAP_API_KEY rebble/pebble-sdk make
-
-docker:
-	docker run --rm -it --name rebble-build -v $(shell pwd):/pebble/ --workdir /pebble/ -e OPENWEATHERMAP_API_KEY -e PEBBLE_PHONE rebble/pebble-sdk
 
 .PHONY: all build config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs weather-api

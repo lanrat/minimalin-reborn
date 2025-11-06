@@ -20,15 +20,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: build
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install Pebble SDK
+        run: |
+          uv tool install pebble-tool
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Pebble SDK dependencies
+        run: |
+          pebble sdk install latest
+
+      - name: Build watchface
         env:
           OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
-        run: make docker-build
+        run: make
+
       - name: Upload PBW to Action
         uses: actions/upload-artifact@v4
         with:
           name: minimalin-reborn
           path: ${{ github.workspace }}/build/*.pbw
+
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')

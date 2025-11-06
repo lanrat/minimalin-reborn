@@ -1,0 +1,6 @@
+{
+    "recommendations": [
+        "coredevices.pebble-vscode",
+        "ms-vscode.cpptools"
+    ]
+}

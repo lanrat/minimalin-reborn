@@ -54,7 +54,7 @@
       "AppKeyHealthEnabled": 19,
       "AppKeyBatteryDisplayedAt": 20
     },
-    "enableMultiJS": false,
+    "enableMultiJS": true,
     "displayName": "Minimalin Reborn",
     "watchapp": {
       "onlyShownOnCommunication": false,

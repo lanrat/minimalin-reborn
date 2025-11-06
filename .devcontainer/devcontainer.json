@@ -1,0 +1,38 @@
+{
+	// Based on https://github.com/coredevices/codespaces-pebble
+	// TODO: Switch to published image when available (see https://github.com/coredevices/codespaces-pebble/issues/1)
+	"name": "Pebble Watchface - Minimalin",
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {},
+		"ghcr.io/devcontainers/features/python:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+	"forwardPorts": [
+		6080
+	],
+	"onCreateCommand": {
+		"apt": "sudo apt update && sudo apt install -y libsdl2-dev",
+		"pebble-tool": "curl -LsSf https://astral.sh/uv/install.sh | sh && uv tool install pebble-tool && pebble sdk install latest"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"coredevices.pebble-vscode",
+				"ms-vscode.cpptools-extension-pack",
+				"-ms-python.python"
+			],
+			"settings": {
+				"remote.autoForwardPorts": false,
+				"workbench.welcomePage.walkthroughs.openOnInstall": false,
+				"git.openRepositoryInParentFolders": "always"
+			}
+		},
+		"remoteEnv": {
+			"LOCALWORKSPACEFOLDERBASENAME": "${localWorkspaceFolderBasename}",
+			"LOCALWORKSPACEFOLDER": "${localWorkspaceFolder}",
+			"CONTAINERWORKSPACEFOLDER": "${containerWorkspaceFolder}",
+			"CONTAINERWORKSPACEFOLDERBASENAME": "${containerWorkspaceFolderBasename}"
+		}
+	}
+}
