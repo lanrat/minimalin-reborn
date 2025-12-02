@@ -1,3 +1,14 @@
+// DEBUG is set in build_config.js (generated at build time)
+// API_ID is set in weather_id.js (generated at build time)
+
+function debug() {
+  if (!window.DEBUG) return;
+  var args = Array.prototype.slice.call(arguments).map(function(arg) {
+    return (typeof arg === 'object' && arg !== null) ? JSON.stringify(arg) : arg;
+  });
+  console.log.apply(console, args);
+}
+
 var Config = function(name){
   var load = function(){
     try {
@@ -62,14 +73,22 @@ var Weather = function(pebble){
   }
 
   var fetchWeather = function(query) {
-    if (!API_ID || API_ID.length == 0) {
+    debug('fetchWeather called with query:', query);
+    debug('API_ID defined:', typeof window.API_ID !== 'undefined', 'value length:', window.API_ID ? window.API_ID.length : 'N/A');
+    if (!window.API_ID || window.API_ID.length == 0) {
       console.error("no weather API key");
       Pebble.sendAppMessage({ 'AppKeyWeatherFailed': 1 });
+      return;
     }
+    debug('API key check passed');
     var req = new XMLHttpRequest();
-    query += '&cnt=1&appid=' + API_ID;
-    req.open(METHOD, BASE_URL + '?' + query, true);
+    debug('XMLHttpRequest created');
+    query += '&cnt=1&appid=' + window.API_ID;
+    var url = BASE_URL + '?' + query;
+    debug('fetchWeather requesting:', url);
+    req.open(METHOD, url, true);
     req.onload = function () {
+      debug('fetchWeather onload, readyState:', req.readyState, 'status:', req.status);
       if (req.readyState === 4) {
         if (req.status === 200) {
           var response = JSON.parse(req.responseText);
@@ -81,25 +100,29 @@ var Weather = function(pebble){
             'AppKeyWeatherIcon': icon,
             'AppKeyWeatherTemperature': temperature
           };
-          //console.log('fetchWeather sendAppMessage:', JSON.stringify(data));
+          debug('fetchWeather success, sending:', data);
           Pebble.sendAppMessage(data);
         } else {
-          //console.log('error: fetchWeather AppKeyWeatherFailed:', JSON.stringify(req));
+          debug('fetchWeather error, status:', req.status, 'response:', req.responseText);
           Pebble.sendAppMessage({ 'AppKeyWeatherFailed': 1 });
         }
       }
+    };
+    req.onerror = function() {
+      debug('fetchWeather network error:', req.status, req.statusText);
+      Pebble.sendAppMessage({ 'AppKeyWeatherFailed': 1 });
     };
     req.send(null);
   }
 
   var locationSuccess = function(pos) {
-    //console.log('AppKeyWeatherFailed: locationSuccess');
+    debug('locationSuccess:', pos.coords.latitude, pos.coords.longitude);
     var coordinates = pos.coords;
     fetchWeatherForCoordinates(coordinates.latitude, coordinates.longitude);
   }
 
   var locationError = function(err) {
-    //console.log('error: AppKeyWeatherFailed: locationError');
+    debug('locationError:', err.code, err.message);
     pebble.sendAppMessage({
       'AppKeyWeatherFailed': 0
     });
@@ -107,13 +130,16 @@ var Weather = function(pebble){
 
   pebble.addEventListener('appmessage', function (e) {
     var dict = e.payload;
-    //console.log('appmessage:', JSON.stringify(dict));
+    debug('appmessage:', dict);
     if(dict['AppKeyWeatherRequest']) {
+      debug('Weather request received');
       var config = Config('config');
       var location = config.load().location;
       if(location){
+        debug('Using configured location:', location);
         fetchWeatherForLocation(location);
       }else{
+        debug('Requesting geolocation...');
         window.navigator.geolocation.getCurrentPosition(locationSuccess, locationError, LOCATION_OPTS);
       }
     }
@@ -122,6 +148,7 @@ var Weather = function(pebble){
 
 
 Pebble.addEventListener('ready', function (e) {
+  debug('JS ready');
   var data = { 'AppKeyJsReady': 1 };
   Pebble.sendAppMessage(data);
 });

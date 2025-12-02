@@ -2,7 +2,7 @@
 VERSION=$(shell cat package.json | grep version | grep -o "[0-9][0-9]*\.[0-9][0-9]*")
 NAME=$(shell cat package.json | grep '"name":' | head -1 | sed 's/,//g' |sed 's/"//g' | awk '{ print $2 }')
 
-all: build
+default: build
 
 init_overlays:
 	mkdir -p resources/data
@@ -11,11 +11,20 @@ init_overlays:
 	touch resources/data/OVL_chalk.bin
 	touch resources/data/OVL_diorite.bin
 
-build: weather-api init_overlays
+build: build-config-release weather-api init_overlays
 	pebble build
 
+debug: build-config-debug weather-api init_overlays
+	pebble build
+
+build-config-release:
+	@echo "window.DEBUG = false;" > src/pkjs/build_config.js
+
+build-config-debug:
+	@echo "window.DEBUG = true;" > src/pkjs/build_config.js
+
 weather-api:
-	@echo "var API_ID = '$(OPENWEATHERMAP_API_KEY)';" > src/pkjs/weather_id.js
+	@echo "window.API_ID = '$(OPENWEATHERMAP_API_KEY)';" > src/pkjs/weather_id.js
 
 config:
 	pebble emu-app-config --emulator $(PEBBLE_EMULATOR)
@@ -28,7 +37,7 @@ install:
 
 clean:
 	pebble clean
-	rm src/pkjs/weather_id.js
+	rm -f src/pkjs/weather_id.js src/pkjs/build_config.js
 
 size:
 	pebble analyze-size
@@ -54,4 +63,4 @@ timeline-off:
 wipe:
 	pebble wipe
 
-.PHONY: all build config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs weather-api
+.PHONY: all build debug config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs weather-api build-config-release build-config-debug
