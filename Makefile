@@ -1,5 +1,6 @@
 
-VERSION=$(shell cat package.json | grep version | grep -o "[0-9][0-9]*\.[0-9][0-9]*")
+# Extract version (X.Y) from git tag, stripping 'v' prefix. Pebble requires patch version to be 0.
+GIT_VERSION=$(shell git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' | cut -d. -f1,2 || echo "0.0").0
 NAME=$(shell cat package.json | grep '"name":' | head -1 | sed 's/,//g' |sed 's/"//g' | awk '{ print $2 }')
 
 default: build
@@ -11,11 +12,15 @@ init_overlays:
 	touch resources/data/OVL_chalk.bin
 	touch resources/data/OVL_diorite.bin
 
-build: build-config-release weather-api init_overlays
+build: set-version build-config-release weather-api init_overlays
 	pebble build
 
-debug: build-config-debug weather-api init_overlays
+debug: set-version build-config-debug weather-api init_overlays
 	pebble build
+
+set-version:
+	@sed 's/"version": "[^"]*"/"version": "$(GIT_VERSION)"/' package.template.json > package.json
+	@echo "Version: $(GIT_VERSION)"
 
 build-config-release:
 	@echo "window.DEBUG = false;" > src/pkjs/build_config.js
@@ -37,7 +42,7 @@ install:
 
 clean:
 	pebble clean
-	rm -f src/pkjs/weather_id.js src/pkjs/build_config.js
+	rm -f src/pkjs/weather_id.js src/pkjs/build_config.js package.json
 
 size:
 	pebble analyze-size
@@ -63,4 +68,4 @@ timeline-off:
 wipe:
 	pebble wipe
 
-.PHONY: all build debug config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs weather-api build-config-release build-config-debug
+.PHONY: all build debug config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs weather-api build-config-release build-config-debug set-version
