@@ -9,6 +9,7 @@ Minimalin is a fully customizable watchface that blends analog and digital for a
 Minimalin uses Nupe, a custom font with numbers and icons, optimized with bitmap mapping to perfectly fit the pixel grid of the Pebble watch.
 
 Some key features of Minimalin:
+
 * Fully configurable colors
 * Weather conditions and temperature
 * Date display
@@ -17,7 +18,7 @@ Some key features of Minimalin:
 * Bluetooth disconnected icon (pick your favorite)
 * Rainbow hand :rainbow:
 
-Go and grab it [here](https://apps.rebble.io/en_US/application/63792649c6c24a000a815e70).
+Go and grab it from [Rebble](https://apps.rebble.io/en_US/application/63792649c6c24a000a815e70) or [RePebble](https://apps.repebble.com/en_US/application/63792649c6c24a000a815e70).
 
 [Test releases here](https://github.com/lanrat/minimalin-reborn/releases)
 
