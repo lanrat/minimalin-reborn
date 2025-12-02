@@ -1,6 +1,6 @@
 
 # Extract version (X.Y) from git tag, stripping 'v' prefix. Pebble requires patch version to be 0.
-GIT_VERSION=$(shell git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' | cut -d. -f1,2 || echo "0.0").0
+GIT_VERSION=$(shell v=$$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' | cut -d. -f1,2); echo "$${v:-0.0}").0
 NAME=$(shell cat package.json | grep '"name":' | head -1 | sed 's/,//g' |sed 's/"//g' | awk '{ print $2 }')
 
 default: build
