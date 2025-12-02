@@ -49,22 +49,22 @@ This way we'll be able to discuss the idea and see if it matches our vision befo
 
 To create a new tagged GitHub release:
 
-**Important**: Pebble apps require versions in `X.Y.0` format (patch must be 0). Use minor version bumps only.
+**Important**: Pebble apps require versions in `X.Y` format (patch must be 0). Use minor version bumps only.
 
 ```bash
-# 1. Update version in package.json (e.g., 2.1.0 → 2.2.0)
+# 1. Update version in package.json (e.g., 2.1 → 2.2)
 # Make sure patch version is always .0
 
 # 2. Build to verify
 make build
 
 # 3. Commit the version bump
-git add package.json
-git commit -m "Bump version to X.Y.0"
+git add .
+git commit -m "Bump version to X.Y"
 
 # 4. Create and push the tag
-git tag -a vX.Y.0 -m "Version X.Y.0"
-git push && git push --tags
+git tag -a vX.Y
+git push --tags
 
 # The GitHub Action will automatically build and create the release with the .pbw file
 ```

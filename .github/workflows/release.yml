@@ -15,12 +15,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          enable-cache: false
+          enable-cache: auto
 
       - name: Install Pebble SDK
         run: |
@@ -42,9 +42,16 @@ jobs:
           name: minimalin-reborn
           path: ${{ github.workspace }}/build/*.pbw
 
+      - name: Rename PBW with version
+        if: github.ref_type == 'tag'
+        run: |
+          for f in ${{ github.workspace }}/build/*.pbw; do
+            mv "$f" "${f%.pbw}-${{ github.ref_name }}.pbw"
+          done
+
       - name: Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref_type == 'tag'
         with:
           generate_release_notes: true
           files: |
