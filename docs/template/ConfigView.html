@@ -155,18 +155,21 @@
  }
 
  #config_page {
-   display: inline-block;
-   min-width: 400px;
+   width: 100%;
+   box-sizing: border-box;
  }
 
  #content {
-   min-width: 500px;
    margin-top: 10px;
    padding-bottom: 40px;
  }
 
  .hidden {
    visibility: hidden;
+ }
+
+ .item {
+   padding-right: 76px;
  }
 
  .item-button:active:not(.disabled) {
@@ -232,6 +235,7 @@
    border: 1px solid #f7f7f7;
    border-radius: 4px;
    width: 80%;
+   box-sizing: border-box;
    box-shadow: 0 19px 38px rgba(0,0,0,0.15), 0 15px 12px rgba(0,0,0,0.15);
  }
 
