@@ -16,6 +16,11 @@
   #define NORTH_INFO_CENTER GPoint(100, 62)
   #define EAST_INFO_CENTER GPoint(150, 112)
   #define WEST_INFO_CENTER GPoint(50, 112)
+#elif defined(PBL_PLATFORM_GABBRO)
+  #define SOUTH_INFO_CENTER GPoint(130, 176)
+  #define NORTH_INFO_CENTER GPoint(130, 75)
+  #define EAST_INFO_CENTER GPoint(188, 124)
+  #define WEST_INFO_CENTER GPoint(72, 124)
 #elif PBL_ROUND
   #define SOUTH_INFO_CENTER GPoint(90, 122)
   #define NORTH_INFO_CENTER GPoint(90, 52)

@@ -11,6 +11,8 @@ init_overlays:
 	touch resources/data/OVL_basalt.bin
 	touch resources/data/OVL_chalk.bin
 	touch resources/data/OVL_diorite.bin
+	touch resources/data/OVL_flint.bin
+	touch resources/data/OVL_gabbro.bin
 
 build: set-version build-config-release weather-api init_overlays
 	pebble build

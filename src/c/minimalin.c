@@ -660,7 +660,9 @@ static void init() {
   s_messenger = messenger_create(17, messenger_callback, messages);
   s_weather_request_timeout = 0;
   s_js_ready = false;
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_GABBRO)
+  s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NUPE_33));
+#elif defined(PBL_PLATFORM_EMERY)
   s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NUPE_28));
 #else
   s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NUPE_23));

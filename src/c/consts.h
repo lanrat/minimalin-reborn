@@ -43,6 +43,44 @@ static GPoint time_points[12] = {
   {23, 65},
   {44, 21}
 };
+#elif defined(PBL_PLATFORM_GABBRO)
+#define RAINBOW_HAND_OFFSET_X 5
+#define RAINBOW_HAND_OFFSET_Y 81
+#define TIME_CONFLICT_OFFSET 14
+#define TICK_WIDTH 2
+#define HOUR_HAND_WIDTH 8
+#define MINUTE_HAND_WIDTH 8
+#define CENTER_CIRCLE_RADIUS 7
+#define MINUTE_HAND_RADIUS 75
+#define HOUR_HAND_RADIUS 56
+static GPoint ticks_points[12][2] = {
+  {{130, 0}  , {130, 9}  },
+  {{195, 17} , {191, 25} },
+  {{243, 65} , {235, 70} },
+  {{260, 130}, {251, 130}},
+  {{243, 195}, {235, 190}},
+  {{195, 243}, {191, 235}},
+  {{130, 260}, {130, 251}},
+  {{65,  243}, {70,  235}},
+  {{17,  195}, {25,  190}},
+  {{0,   130}, {9,   130}},
+  {{17,  65} , {25,  70} },
+  {{65,  17} , {70,  25} }
+};
+static GPoint time_points[12] = {
+  {130, 25} ,
+  {179, 40} ,
+  {217, 72} ,
+  {233, 124},
+  {214, 179},
+  {179, 211},
+  {130, 230},
+  {78,  212},
+  {42,  179},
+  {26,  126},
+  {43,  75} ,
+  {78,  40} ,
+};
 #elif PBL_ROUND
 #define RAINBOW_HAND_OFFSET_X 5
 #define RAINBOW_HAND_OFFSET_Y 55

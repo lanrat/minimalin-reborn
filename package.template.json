@@ -32,6 +32,12 @@
           "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
           "name": "FONT_NUPE_28",
           "file": "fonts/nupe.ttf"
+        },
+        {
+          "type": "font",
+          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "name": "FONT_NUPE_33",
+          "file": "fonts/nupe.ttf"
         }
       ]
     },
@@ -72,7 +78,9 @@
       "chalk",
       "aplite",
       "diorite",
-      "emery"
+      "emery",
+      "flint",
+      "gabbro"
     ],
     "capabilities": [
       "configurable",
