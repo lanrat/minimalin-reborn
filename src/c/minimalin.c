@@ -360,7 +360,7 @@ static void weather_info_update_proc(TextBlock * block){
   const Context * const context = (Context *) text_block_get_context(block);
   const Config * const config = context->config;
   const Weather weather = context->weather;
-  char info_buffer[6] = {0};
+  char info_buffer[10] = {0};
   const int timeout = (config_get_int(config, ConfigKeyRefreshRate) + 5) * 60;
   const int expiration =  weather.timestamp + timeout;
   const bool weather_valid = time(NULL) < expiration;
@@ -368,7 +368,7 @@ static void weather_info_update_proc(TextBlock * block){
     const int temp = weather.temperature;
     const bool is_farhrenheit = config_get_int(config, ConfigKeyTemperatureUnit) == Fahrenheit;
     const int converted_temp = is_farhrenheit ? temp * 9 / 5 + 32 : temp;
-    snprintf(info_buffer, 6, "%c%d°", weather.icon, converted_temp);
+    snprintf(info_buffer, sizeof(info_buffer), "%c%d°", weather.icon, converted_temp);
   }
   const GColor info_color = config_get_color(s_config, ConfigKeyInfoColor);
   text_block_set_text(block, info_buffer, info_color);
@@ -439,7 +439,7 @@ static void steps_info_update_proc(TextBlock * block){
   const Context * const context = (Context *) text_block_get_context(block);
   const Config * const config = context->config;
   const int steps = context->steps;
-  char step_text[8] = {0};
+  char step_text[16] = {0};
   const GColor info_color = config_get_color(config, ConfigKeyInfoColor);
   if(steps > 10000){
     snprintf(step_text, sizeof(step_text), "y%dk", steps / 1000);

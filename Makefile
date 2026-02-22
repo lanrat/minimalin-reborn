@@ -42,7 +42,7 @@ install:
 
 clean:
 	pebble clean
-	rm -f src/pkjs/weather_id.js src/pkjs/build_config.js package.json
+	rm -f src/pkjs/weather_id.js src/pkjs/build_config.js
 
 size:
 	pebble analyze-size
