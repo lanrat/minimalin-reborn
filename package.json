@@ -1,0 +1,83 @@
+{
+  "version": "2.4.0",
+  "author": "lanrat",
+  "private": true,
+  "dependencies": {},
+  "keywords": [
+    "pebble-app"
+  ],
+  "pebble": {
+    "sdkVersion": "3",
+    "resources": {
+      "media": [
+        {
+          "menuIcon": true,
+          "type": "png",
+          "name": "MENU_IMAGE",
+          "file": "images/img_menu.png"
+        },
+        {
+          "type": "png",
+          "name": "IMG_RAINBOW_HAND",
+          "file": "images/rainbow_hand.png"
+        },
+        {
+          "type": "font",
+          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "name": "FONT_NUPE_23",
+          "file": "fonts/nupe.ttf"
+        },
+        {
+          "type": "font",
+          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "name": "FONT_NUPE_28",
+          "file": "fonts/nupe.ttf"
+        }
+      ]
+    },
+    "projectType": "native",
+    "uuid": "e8e629e5-bdc8-4a51-be35-1ffbfbc149e0",
+    "messageKeys": {
+      "AppKeyMinuteHandColor": 0,
+      "AppKeyHourHandColor": 1,
+      "AppKeyDateDisplayed": 2,
+      "AppKeyBluetoothIcon": 3,
+      "AppKeyRainbowMode": 4,
+      "AppKeyBackgroundColor": 5,
+      "AppKeyTimeColor": 6,
+      "AppKeyInfoColor": 7,
+      "AppKeyTemperatureUnit": 8,
+      "AppKeyRefreshRate": 9,
+      "AppKeyWeatherEnabled": 10,
+      "AppKeyConfig": 11,
+      "AppKeyWeatherTemperature": 12,
+      "AppKeyWeatherIcon": 13,
+      "AppKeyWeatherFailed": 14,
+      "AppKeyWeatherRequest": 15,
+      "AppKeyJsReady": 16,
+      "AppKeyVibrateOnTheHour": 17,
+      "AppKeyMilitaryTime": 18,
+      "AppKeyHealthEnabled": 19,
+      "AppKeyBatteryDisplayedAt": 20
+    },
+    "enableMultiJS": true,
+    "displayName": "Minimalin Reborn",
+    "watchapp": {
+      "onlyShownOnCommunication": false,
+      "hiddenApp": false,
+      "watchface": true
+    },
+    "targetPlatforms": [
+      "basalt",
+      "chalk",
+      "aplite",
+      "diorite",
+      "emery"
+    ],
+    "capabilities": [
+      "configurable",
+      "health"
+    ]
+  },
+  "name": "minimalin-reborn"
+}

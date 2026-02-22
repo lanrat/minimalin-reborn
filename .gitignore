@@ -9,4 +9,3 @@ resources/data/
 # Generated config files
 src/pkjs/weather_id.js
 src/pkjs/build_config.js
-package.json
