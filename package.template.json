@@ -1,91 +1,91 @@
 {
-  "version": "0.0.0-dev",
   "author": "lanrat",
-  "private": true,
   "dependencies": {},
   "keywords": [
     "pebble-app"
   ],
+  "name": "minimalin-reborn",
   "pebble": {
-    "sdkVersion": "3",
+    "capabilities": [
+      "configurable",
+      "health"
+    ],
+    "displayName": "Minimalin Reborn",
+    "enableMultiJS": true,
+    "messageKeys": {
+      "AppKeyBackgroundColor": 5,
+      "AppKeyBatteryDisplayedAt": 20,
+      "AppKeyBluetoothIcon": 3,
+      "AppKeyConfig": 11,
+      "AppKeyDateDisplayed": 2,
+      "AppKeyHealthEnabled": 19,
+      "AppKeyHourHandColor": 1,
+      "AppKeyInfoColor": 7,
+      "AppKeyJsReady": 16,
+      "AppKeyMilitaryTime": 18,
+      "AppKeyMinuteHandColor": 0,
+      "AppKeyRainbowMode": 4,
+      "AppKeyRefreshRate": 9,
+      "AppKeyTemperatureUnit": 8,
+      "AppKeyTimeColor": 6,
+      "AppKeyVibrateOnTheHour": 17,
+      "AppKeyWeatherEnabled": 10,
+      "AppKeyWeatherFailed": 14,
+      "AppKeyWeatherIcon": 13,
+      "AppKeyWeatherRequest": 15,
+      "AppKeyWeatherTemperature": 12
+    },
+    "projectType": "native",
     "resources": {
       "media": [
         {
+          "file": "images/img_menu.png",
           "menuIcon": true,
-          "type": "png",
           "name": "MENU_IMAGE",
-          "file": "images/img_menu.png"
+          "type": "png"
         },
         {
-          "type": "png",
+          "file": "images/rainbow_hand.png",
           "name": "IMG_RAINBOW_HAND",
-          "file": "images/rainbow_hand.png"
+          "type": "png"
         },
         {
-          "type": "font",
           "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_23",
-          "file": "fonts/nupe.ttf"
+          "type": "font"
         },
         {
-          "type": "font",
           "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_28",
-          "file": "fonts/nupe.ttf"
+          "type": "font"
         },
         {
-          "type": "font",
           "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_33",
-          "file": "fonts/nupe.ttf"
+          "type": "font"
         }
       ]
     },
-    "projectType": "native",
-    "uuid": "e8e629e5-bdc8-4a51-be35-1ffbfbc149e0",
-    "messageKeys": {
-      "AppKeyMinuteHandColor": 0,
-      "AppKeyHourHandColor": 1,
-      "AppKeyDateDisplayed": 2,
-      "AppKeyBluetoothIcon": 3,
-      "AppKeyRainbowMode": 4,
-      "AppKeyBackgroundColor": 5,
-      "AppKeyTimeColor": 6,
-      "AppKeyInfoColor": 7,
-      "AppKeyTemperatureUnit": 8,
-      "AppKeyRefreshRate": 9,
-      "AppKeyWeatherEnabled": 10,
-      "AppKeyConfig": 11,
-      "AppKeyWeatherTemperature": 12,
-      "AppKeyWeatherIcon": 13,
-      "AppKeyWeatherFailed": 14,
-      "AppKeyWeatherRequest": 15,
-      "AppKeyJsReady": 16,
-      "AppKeyVibrateOnTheHour": 17,
-      "AppKeyMilitaryTime": 18,
-      "AppKeyHealthEnabled": 19,
-      "AppKeyBatteryDisplayedAt": 20
-    },
-    "enableMultiJS": true,
-    "displayName": "Minimalin Reborn",
-    "watchapp": {
-      "onlyShownOnCommunication": false,
-      "hiddenApp": false,
-      "watchface": true
-    },
+    "sdkVersion": "3",
     "targetPlatforms": [
+      "aplite",
       "basalt",
       "chalk",
-      "aplite",
       "diorite",
       "emery",
       "flint",
       "gabbro"
     ],
-    "capabilities": [
-      "configurable",
-      "health"
-    ]
+    "uuid": "e8e629e5-bdc8-4a51-be35-1ffbfbc149e0",
+    "watchapp": {
+      "hiddenApp": false,
+      "onlyShownOnCommunication": false,
+      "watchface": true
+    }
   },
-  "name": "minimalin-reborn"
+  "private": true,
+  "version": "0.0.0-dev"
 }
