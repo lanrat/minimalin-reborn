@@ -26,10 +26,12 @@ else
   prefix="NO_CONFIG_"
 fi
 
-#screenshots $prefix "aplite"
-#screenshots $prefix "basalt"
-screenshots $prefix "emery"
-#screenshots $prefix "chalk"
-#screenshots $prefix "diorite"
+#screenshots "$prefix" "aplite"
+#screenshots "$prefix" "basalt"
+#screenshots "$prefix" "chalk"
+#screenshots "$prefix" "diorite"
+screenshots "$prefix" "emery"
+#screenshots "$prefix" "flint"
+#screenshots "$prefix" "gabbro"
 
 wait
