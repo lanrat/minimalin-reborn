@@ -6,7 +6,7 @@
 #define QUADRANT_COUNT 4
 #define POSTIONS_COUNT 4
 #define BLOCK_SIZE GSize(38, 20)
-#define QUADRANT(blck, prio, pos) (Quadrant) { .block = block, .priority = prio, .position = pos }
+#define QUADRANT(blck, prio, pos) (Quadrant) { .block = blck, .priority = prio, .position = pos }
 #define BLOCK(quadrants, index) quadrants->quadrants[index]->block
 #define PRIORITY(quadrants, index) quadrants->quadrants[index]->priority
 #define POS(quadrants, index) quadrants->quadrants[index]->position
@@ -169,6 +169,10 @@ Quadrants * quadrants_destroy(Quadrants * const quadrants){
 }
 
 TextBlock * quadrants_add_text_block(Quadrants * const quadrants, Layer * const root_layer, const GFont font, const Priority priority, const tm * const time){
+  const int size = quadrants->size;
+  if(size >= QUADRANT_COUNT){
+    return NULL;
+  }
   Position position = North;
   for(int pos=0;pos<POSTIONS_COUNT;pos++){
     if(quadrants->free_positions[pos]){
@@ -185,10 +189,6 @@ TextBlock * quadrants_add_text_block(Quadrants * const quadrants, Layer * const 
   };
   TextBlock * const block = text_block_create(root_layer, centers[position], font);
   text_block_set_ready(block, false);
-  const int size = quadrants->size;
-  if(size >= QUADRANT_COUNT){
-    return NULL;
-  }
   Quadrant * const quadrant = (Quadrant *) malloc(sizeof(Quadrant));
   *quadrant = QUADRANT(block, priority, position);
   int i = size;

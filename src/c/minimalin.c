@@ -492,7 +492,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed){
   if(HOUR_UNIT & units_changed){
     bool vibrate_on_the_hour = config_get_bool(s_config, ConfigKeyVibrateOnTheHour);
     if (vibrate_on_the_hour) {
-      if( PBL_IF_HEALTH_ELSE(config_get_bool(s_config, ConfigKeyHealthEnabled), false)  ||
+      if( !PBL_IF_HEALTH_ELSE(config_get_bool(s_config, ConfigKeyHealthEnabled), false)  ||
         !(health_service_peek_current_activities() &
           (HealthActivitySleep | HealthActivityRestfulSleep)) ){
         vibes_short_pulse();

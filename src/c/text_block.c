@@ -57,7 +57,8 @@ TextBlock * text_block_destroy(TextBlock * text_block){
 }
 
 void text_block_set_text(TextBlock * text_block, const char * text, const GColor color){
-  strncpy(text_block->text, text, sizeof(text_block->text));
+  strncpy(text_block->text, text, sizeof(text_block->text) - 1);
+  text_block->text[sizeof(text_block->text) - 1] = '\0';
   text_block->color = color;
   text_block_mark_dirty(text_block);
 }
