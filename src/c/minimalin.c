@@ -569,7 +569,6 @@ static void main_window_load(Window *window) {
   text_block_set_context(s_minute_text, &s_context);
   text_block_set_update_proc(s_minute_text, minute_time_update_proc);
 
-  s_tick_layer = layer_create(s_root_layer_bounds);
   s_tick_layer = layer_create_with_data(s_root_layer_bounds, sizeof(Context*));
   Context ** data = (Context**) layer_get_data(s_tick_layer);
   *data = &s_context;
