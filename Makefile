@@ -14,10 +14,10 @@ init_overlays:
 	touch resources/data/OVL_flint.bin
 	touch resources/data/OVL_gabbro.bin
 
-build: set-version build-config-release weather-api init_overlays
+build: set-version build-config-release init_overlays
 	pebble build
 
-debug: set-version build-config-debug weather-api init_overlays
+debug: set-version build-config-debug init_overlays
 	pebble build
 
 set-version:
@@ -30,9 +30,6 @@ build-config-release:
 build-config-debug:
 	@echo "window.DEBUG = true;" > src/pkjs/build_config.js
 
-weather-api:
-	@echo "window.API_ID = '$(OPENWEATHERMAP_API_KEY)';" > src/pkjs/weather_id.js
-
 config:
 	pebble emu-app-config --emulator $(PEBBLE_EMULATOR)
 
@@ -44,7 +41,7 @@ install:
 
 clean:
 	pebble clean
-	rm -f src/pkjs/weather_id.js src/pkjs/build_config.js
+	rm -f src/pkjs/build_config.js
 
 size:
 	pebble analyze-size
@@ -70,4 +67,4 @@ timeline-off:
 wipe:
 	pebble wipe
 
-.PHONY: all build debug config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs weather-api build-config-release build-config-debug set-version
+.PHONY: all build debug config log install clean size logs screenshot deploy timeline-on timeline-off wipe phone-logs build-config-release build-config-debug set-version

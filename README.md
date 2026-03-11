@@ -71,4 +71,4 @@ git push --tags
 
 ## Credits
 
-Thanks to [OpenWeatherMap](http://openweathermap.org/) for providing us with a free API key.
+Weather data provided by [Open-Meteo](https://open-meteo.com/).

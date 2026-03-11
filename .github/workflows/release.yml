@@ -30,8 +30,6 @@ jobs:
           pebble sdk install latest
 
       - name: Build watchface
-        env:
-          OPENWEATHERMAP_API_KEY: ${{ secrets.OPENWEATHERMAP_API_KEY }}
         run: make
 
       - name: Upload PBW to Action

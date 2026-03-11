@@ -1,5 +1,4 @@
 // DEBUG is set in build_config.js (generated at build time)
-// API_ID is set in weather_id.js (generated at build time)
 
 function debug() {
   if (!window.DEBUG) return;
@@ -31,71 +30,42 @@ var Config = function(name){
 };
 
 var Weather = function(pebble){
-  var METHOD = 'GET';
-  var BASE_URL = 'http://api.openweathermap.org/data/2.5/weather';
-  var ICONS = {
-    '01d': 'a',
-    '02d': 'b',
-    '03d': 'c',
-    '04d': 'd',
-    '09d': 'e',
-    '10d': 'f',
-    '11d': 'g',
-    '13d': 'h',
-    '50d': 'i',
-    '01n': 'A',
-    '02n': 'B',
-    '03n': 'C',
-    '04n': 'D',
-    '09n': 'E',
-    '10n': 'F',
-    '11n': 'G',
-    '13n': 'H',
-    '50n': 'I',
-  };
+  var BASE_URL = 'https://api.open-meteo.com/v1/forecast';
   var LOCATION_OPTS = {
     'timeout': 5000,
     'maximumAge': 30 * 60 * 1000
   };
 
-  var parseIcon = function(icon){
-    return ICONS[icon].charCodeAt(0);
-  }
+  // Map WMO weather code + is_day to icon charCode for custom font
+  var wmoToIcon = function(code, isDay) {
+    var char;
+    if (code <= 1) char = 'a';                    // Clear / mainly clear
+    else if (code === 2) char = 'b';              // Partly cloudy
+    else if (code === 3) char = 'd';              // Overcast
+    else if (code >= 45 && code <= 48) char = 'i'; // Fog
+    else if (code >= 51 && code <= 57) char = 'e'; // Drizzle
+    else if (code >= 61 && code <= 67) char = 'f'; // Rain
+    else if (code >= 71 && code <= 77) char = 'h'; // Snow
+    else if (code >= 80 && code <= 82) char = 'e'; // Rain showers
+    else if (code >= 85 && code <= 86) char = 'h'; // Snow showers
+    else if (code >= 95) char = 'g';               // Thunderstorm
+    else char = 'b';                               // Fallback
+    if (!isDay) char = char.toUpperCase();
+    return char.charCodeAt(0);
+  };
 
-  var fetchWeatherForLocation = function(location){
-    var query = 'q=' + location;
-    fetchWeather(query);
-  }
-
-  var fetchWeatherForCoordinates = function(latitude, longitude){
-    var query = 'lat=' + latitude + '&lon=' + longitude;
-    fetchWeather(query);
-  }
-
-  var fetchWeather = function(query) {
-    debug('fetchWeather called with query:', query);
-    debug('API_ID defined:', typeof window.API_ID !== 'undefined', 'value length:', window.API_ID ? window.API_ID.length : 'N/A');
-    if (!window.API_ID || window.API_ID.length == 0) {
-      console.error("no weather API key");
-      Pebble.sendAppMessage({ 'AppKeyWeatherFailed': 1 });
-      return;
-    }
-    debug('API key check passed');
+  var fetchWeather = function(latitude, longitude) {
     var req = new XMLHttpRequest();
-    debug('XMLHttpRequest created');
-    query += '&cnt=1&appid=' + window.API_ID;
-    var url = BASE_URL + '?' + query;
+    var url = BASE_URL + '?latitude=' + latitude + '&longitude=' + longitude + '&current=temperature_2m,weather_code,is_day';
     debug('fetchWeather requesting:', url);
-    req.open(METHOD, url, true);
+    req.open('GET', url, true);
     req.onload = function () {
       debug('fetchWeather onload, readyState:', req.readyState, 'status:', req.status);
       if (req.readyState === 4) {
         if (req.status === 200) {
           var response = JSON.parse(req.responseText);
-          var timestamp = response.dt;
-          var temperature = Math.round(response.main.temp - 273.5);
-          var icon = parseIcon(response.weather[0].icon);
-          var city = response.name;
+          var temperature = Math.round(response.current.temperature_2m);
+          var icon = wmoToIcon(response.current.weather_code, response.current.is_day);
           var data = {
             'AppKeyWeatherIcon': icon,
             'AppKeyWeatherTemperature': temperature
@@ -113,35 +83,26 @@ var Weather = function(pebble){
       Pebble.sendAppMessage({ 'AppKeyWeatherFailed': 1 });
     };
     req.send(null);
-  }
+  };
 
   var locationSuccess = function(pos) {
     debug('locationSuccess:', pos.coords.latitude, pos.coords.longitude);
-    var coordinates = pos.coords;
-    fetchWeatherForCoordinates(coordinates.latitude, coordinates.longitude);
-  }
+    fetchWeather(pos.coords.latitude, pos.coords.longitude);
+  };
 
   var locationError = function(err) {
     debug('locationError:', err.code, err.message);
     pebble.sendAppMessage({
       'AppKeyWeatherFailed': 0
     });
-  }
+  };
 
   pebble.addEventListener('appmessage', function (e) {
     var dict = e.payload;
     debug('appmessage:', dict);
     if(dict['AppKeyWeatherRequest']) {
-      debug('Weather request received');
-      var config = Config('config');
-      var location = config.load().location;
-      if(location){
-        debug('Using configured location:', location);
-        fetchWeatherForLocation(location);
-      }else{
-        debug('Requesting geolocation...');
-        window.navigator.geolocation.getCurrentPosition(locationSuccess, locationError, LOCATION_OPTS);
-      }
+      debug('Weather request received, requesting geolocation...');
+      window.navigator.geolocation.getCurrentPosition(locationSuccess, locationError, LOCATION_OPTS);
     }
   });
 }(Pebble);

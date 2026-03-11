@@ -107,7 +107,6 @@
     <Toggle value="{{ weather_enabled }}" label="Weather"/>
     {{#if weather_enabled}}
     <div intro-outro='slide'>
-      <Input header="Fixed location (empty to use phone location)" placeholder="Ex: Dublin,Ireland" value="{{ location }}"/>
       <Tabs source="{{ temparetureUnitSource }}" value="{{ temperature_unit }}" header="Temperature unit"/>
       <Tabs source="{{ refreshRateSource }}" value="{{ refresh_rate }}" header="Refresh rate"/>
     </div>
@@ -570,7 +569,6 @@
          temperature_unit: this.get('temperature_unit'),
          vibrate_on_the_hour: this.get('vibrate_on_the_hour'),
          rainbow_mode: this.get('rainbow_mode'),
-         location: this.get('location') || '',
          military_time: this.get('military_time'),
          themes: this.get('themes')
        };
