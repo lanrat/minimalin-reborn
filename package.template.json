@@ -33,7 +33,8 @@
       "AppKeyWeatherFailed": 14,
       "AppKeyWeatherIcon": 13,
       "AppKeyWeatherRequest": 15,
-      "AppKeyWeatherTemperature": 12
+      "AppKeyWeatherTemperature": 12,
+      "AppKeyWeatherVariable": 21
     },
     "projectType": "native",
     "resources": {

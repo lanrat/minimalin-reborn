@@ -29,7 +29,7 @@
     {{/if}}
     <g>
       {{#if weather_enabled}}
-      <text x="177" y="123" text-anchor="middle" fill="{{ infoColor }}" style="font-family:'Nupe-CondensedRegular'; font-size:42;">b18°</text>
+      <text x="177" y="123" text-anchor="middle" fill="{{ infoColor }}" style="font-family:'Nupe-CondensedRegular'; font-size:42;">{{ weatherPreviewText }}</text>
       {{/if}}
       {{#if date_displayed}}
       <text x="255" y="195.5" text-anchor="middle" fill="{{ infoColor }}" style="font-family:'Nupe-CondensedRegular'; font-size:42;">31</text>
@@ -107,6 +107,7 @@
     <Toggle value="{{ weather_enabled }}" label="Weather"/>
     {{#if weather_enabled}}
     <div intro-outro='slide'>
+      <Tabs source="{{ weatherVariableSource }}" value="{{ weather_variable }}" header="Weather variable"/>
       <Tabs source="{{ temparetureUnitSource }}" value="{{ temperature_unit }}" header="Temperature unit"/>
       <Tabs source="{{ refreshRateSource }}" value="{{ refresh_rate }}" header="Refresh rate"/>
     </div>
@@ -421,6 +422,22 @@
          { label: "40 min", value: 40 }
        ];
      },
+    weatherVariableSource: function(){
+      return [
+        { label: "Current Temp", value: 0 },
+        { label: "Apparent Temp", value: 1 },
+        { label: "Sunset", value: 2 }
+      ];
+    },
+    weatherPreviewText: function(){
+      switch(this.get('weather_variable')){
+        case 2:
+          return this.get('military_time') ? "18:34" : "6:34";
+        case 1:
+        default:
+          return "18°";
+      }
+    },
      infoColor: function(){
        return this.color(this.get('info_color'))
      },
@@ -565,6 +582,7 @@
          time_color: this.get('time_color'),
          info_color: this.get('info_color'),
          weather_enabled: this.get('weather_enabled'),
+         weather_variable: this.get('weather_variable'),
          refresh_rate: this.get('refresh_rate'),
          temperature_unit: this.get('temperature_unit'),
          vibrate_on_the_hour: this.get('vibrate_on_the_hour'),

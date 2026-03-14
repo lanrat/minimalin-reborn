@@ -32,7 +32,8 @@ typedef enum {
   AppKeyVibrateOnTheHour,
   AppKeyMilitaryTime,
   AppKeyHealthEnabled,
-  AppKeyBatteryDisplayedAt
+  AppKeyBatteryDisplayedAt,
+  AppKeyWeatherVariable
 } AppKey;
 
 typedef enum {
@@ -43,7 +44,7 @@ typedef enum {
 typedef struct {
   int32_t timestamp;
   int8_t icon;
-  int8_t temperature;
+  int16_t value_primary;
 } __attribute__((__packed__)) Weather;
 
 typedef struct {
@@ -146,6 +147,12 @@ static void config_temperature_unit_updated(DictionaryIterator * iter, Tuple * t
   text_block_mark_dirty(s_weather_info);
 }
 
+static void config_weather_variable_updated(DictionaryIterator * iter, Tuple * tuple){
+  config_set_int(s_config, ConfigKeyWeatherVariable, tuple->value->int32);
+  s_context.reset_weather = true;
+  text_block_mark_dirty(s_weather_info);
+}
+
 static void config_bluetooth_icon_updated(DictionaryIterator * iter, Tuple * tuple){
   config_set_int(s_config, ConfigKeyBluetoothIcon, tuple->value->int32);
   text_block_mark_dirty(s_watch_info);
@@ -199,11 +206,13 @@ static void js_ready_callback(DictionaryIterator * iter, Tuple * tuple){
 static void weather_requested_callback(DictionaryIterator * iter, Tuple * tuple){
   s_context.reset_weather = false;
   const Tuple * const icon_tuple = dict_find(iter, AppKeyWeatherIcon);
-  const Tuple * const temp_tuple = dict_find(iter, AppKeyWeatherTemperature);
-  if(icon_tuple && temp_tuple){
+  const Tuple * const primary_tuple = dict_find(iter, AppKeyWeatherTemperature);
+  if(primary_tuple){
     s_context.weather.timestamp = time(NULL);
-    s_context.weather.icon = icon_tuple->value->int8;
-    s_context.weather.temperature = temp_tuple->value->int8;
+    if(icon_tuple){
+      s_context.weather.icon = icon_tuple->value->int8;
+    }
+    s_context.weather.value_primary = primary_tuple->value->int16;
   }
   persist_write_data(PersistKeyWeather, &s_context.weather, sizeof(Weather));
   text_block_mark_dirty(s_weather_info);
@@ -360,15 +369,40 @@ static void weather_info_update_proc(TextBlock * block){
   const Context * const context = (Context *) text_block_get_context(block);
   const Config * const config = context->config;
   const Weather weather = context->weather;
-  char info_buffer[10] = {0};
+  char info_buffer[20] = {0};
   const int timeout = (config_get_int(config, ConfigKeyRefreshRate) + 5) * 60;
   const int expiration =  weather.timestamp + timeout;
   const bool weather_valid = time(NULL) < expiration;
   if(weather_valid){
-    const int temp = weather.temperature;
-    const bool is_farhrenheit = config_get_int(config, ConfigKeyTemperatureUnit) == Fahrenheit;
-    const int converted_temp = is_farhrenheit ? temp * 9 / 5 + 32 : temp;
-    snprintf(info_buffer, sizeof(info_buffer), "%c%d°", weather.icon, converted_temp);
+    const char icon = weather.icon ? weather.icon : 'b';
+    const WeatherVariable weather_variable = config_get_int(config, ConfigKeyWeatherVariable);
+    switch(weather_variable){
+      case WeatherVariableCurrentTemperature:
+      case WeatherVariableApparentTemperature: {
+        const int temp = weather.value_primary;
+        const bool is_farhrenheit = config_get_int(config, ConfigKeyTemperatureUnit) == Fahrenheit;
+        const int converted_temp = is_farhrenheit ? temp * 9 / 5 + 32 : temp;
+        snprintf(info_buffer, sizeof(info_buffer), "%c%d°", icon, converted_temp);
+        break;
+      }
+      case WeatherVariableSunset: {
+        const int total_minutes = weather.value_primary;
+        if(total_minutes >= 0){
+          const int hour_24 = total_minutes / 60;
+          const int minute = total_minutes % 60;
+          if(config_get_bool(config, ConfigKeyMilitaryTime)){
+            snprintf(info_buffer, sizeof(info_buffer), "%c%d:%02d", icon, hour_24, minute);
+          }else{
+            const int hour_12 = hour_24 % 12 == 0 ? 12 : hour_24 % 12;
+            snprintf(info_buffer, sizeof(info_buffer), "%c%d:%02d", icon, hour_12, minute);
+          }
+        }
+        break;
+      }
+      default:
+        snprintf(info_buffer, sizeof(info_buffer), "%c%d°", icon, weather.value_primary);
+        break;
+    }
   }
   const GColor info_color = config_get_color(s_config, ConfigKeyInfoColor);
   text_block_set_text(block, info_buffer, info_color);
@@ -649,6 +683,7 @@ static void init() {
     { AppKeyBluetoothIcon, config_bluetooth_icon_updated },
     { AppKeyRefreshRate, config_refresh_rate_updated },
     { AppKeyTemperatureUnit, config_temperature_unit_updated },
+    { AppKeyWeatherVariable, config_weather_variable_updated },
     { AppKeyWeatherEnabled, config_weather_enabled_updated },
     { AppKeyWeatherTemperature, weather_requested_callback },
     { AppKeyVibrateOnTheHour, config_hourly_vibrate_updated },
@@ -656,7 +691,7 @@ static void init() {
     { AppKeyHealthEnabled, config_health_enabled_updated },
     { AppKeyBatteryDisplayedAt, config_battery_displayed_at_updated }
   };
-  s_messenger = messenger_create(17, messenger_callback, messages);
+  s_messenger = messenger_create(18, messenger_callback, messages);
   s_weather_request_timeout = 0;
   s_js_ready = false;
 #if defined(PBL_PLATFORM_GABBRO)

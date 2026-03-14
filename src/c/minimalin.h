@@ -2,6 +2,11 @@
 
 typedef enum { NoIcon = 0, Bluetooth , Heart } BluetoothIcon;
 typedef enum { Celsius = 0, Fahrenheit } TemperatureUnit;
+typedef enum {
+  WeatherVariableCurrentTemperature = 0,
+  WeatherVariableApparentTemperature,
+  WeatherVariableSunset
+} WeatherVariable;
 
 typedef enum {
   ConfigKeyMinuteHandColor = 0,
@@ -19,10 +24,11 @@ typedef enum {
   ConfigKeyVibrateOnTheHour,
   ConfigKeyMilitaryTime,
   ConfigKeyHealthEnabled,
-  ConfigKeyBatteryDisplayedAt
+  ConfigKeyBatteryDisplayedAt,
+  ConfigKeyWeatherVariable
 } ConfigKey;
 
-#define CONF_SIZE 16
+#define CONF_SIZE 17
 
 
 #ifndef CONFIG_BLUETOOTH_ICON
@@ -60,5 +66,6 @@ ConfValue CONF_DEFAULTS[CONF_SIZE] = {
   { .key = ConfigKeyVibrateOnTheHour, .type = BoolConf, .value = { .boolean = false } },
   { .key = ConfigKeyMilitaryTime, .type = BoolConf, .value = { .boolean = CONFIG_MILITARY_TIME } },
   { .key = ConfigKeyHealthEnabled, .type = BoolConf, .value = { .boolean = false } },
-  { .key = ConfigKeyBatteryDisplayedAt, .type = IntConf, .value = { .integer = -1 } }
+  { .key = ConfigKeyBatteryDisplayedAt, .type = IntConf, .value = { .integer = -1 } },
+  { .key = ConfigKeyWeatherVariable, .type = IntConf, .value = { .integer = WeatherVariableCurrentTemperature } }
 };

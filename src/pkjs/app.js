@@ -29,11 +29,28 @@ var Config = function(name){
   }
 };
 
-var Weather = function(pebble){
+var Weather = function (pebble) {
   var BASE_URL = 'https://api.open-meteo.com/v1/forecast';
   var LOCATION_OPTS = {
     'timeout': 5000,
     'maximumAge': 30 * 60 * 1000
+  };
+
+  var WeatherVariable = {
+    CURRENT_TEMPERATURE: 0,
+    APPARENT_TEMPERATURE: 1,
+    SUNSET: 2
+  };
+
+  var getWeatherVariable = function () {
+    var config = Config('config').load();
+    if (typeof config.weather_variable !== 'number') {
+      return WeatherVariable.CURRENT_TEMPERATURE;
+    }
+    if (config.weather_variable < WeatherVariable.CURRENT_TEMPERATURE || config.weather_variable > WeatherVariable.SUNSET) {
+      return WeatherVariable.CURRENT_TEMPERATURE;
+    }
+    return config.weather_variable;
   };
 
   // Map WMO weather code + is_day to icon charCode for custom font
@@ -54,9 +71,30 @@ var Weather = function(pebble){
     return char.charCodeAt(0);
   };
 
-  var fetchWeather = function(latitude, longitude) {
+  var buildUrl = function (latitude, longitude, weatherVariable) {
+    var url = BASE_URL + '?latitude=' + latitude + '&longitude=' + longitude + '&forecast_days=1&timezone=auto';
+    var currentVars = ['weather_code', 'is_day'];
+    if (weatherVariable === WeatherVariable.SUNSET) {
+      url += '&daily=sunset';
+    } else if (weatherVariable === WeatherVariable.APPARENT_TEMPERATURE) {
+      currentVars.unshift('apparent_temperature');
+    } else {
+      currentVars.unshift('temperature_2m');
+    }
+    url += '&current=' + currentVars.join(',');
+    return url;
+  };
+
+  var parseSunsetMinutes = function (sunsetIso) {
+    var match = /T(\d{2}):(\d{2})/.exec(sunsetIso || '');
+    if (!match) return -1;
+    return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+  };
+
+  var fetchWeather = function (latitude, longitude) {
     var req = new XMLHttpRequest();
-    var url = BASE_URL + '?latitude=' + latitude + '&longitude=' + longitude + '&current=temperature_2m,weather_code,is_day';
+    var weatherVariable = getWeatherVariable();
+    var url = buildUrl(latitude, longitude, weatherVariable);
     debug('fetchWeather requesting:', url);
     req.open('GET', url, true);
     req.onload = function () {
@@ -64,11 +102,18 @@ var Weather = function(pebble){
       if (req.readyState === 4) {
         if (req.status === 200) {
           var response = JSON.parse(req.responseText);
-          var temperature = Math.round(response.current.temperature_2m);
           var icon = wmoToIcon(response.current.weather_code, response.current.is_day);
+          var valuePrimary = 0;
+          if (weatherVariable === WeatherVariable.APPARENT_TEMPERATURE) {
+            valuePrimary = Math.round(response.current.apparent_temperature);
+          } else if (weatherVariable === WeatherVariable.SUNSET) {
+            valuePrimary = parseSunsetMinutes(response.daily.sunset[0]);
+          } else {
+            valuePrimary = Math.round(response.current.temperature_2m);
+          }
           var data = {
             'AppKeyWeatherIcon': icon,
-            'AppKeyWeatherTemperature': temperature
+            'AppKeyWeatherTemperature': valuePrimary
           };
           debug('fetchWeather success, sending:', data);
           Pebble.sendAppMessage(data);
@@ -141,6 +186,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
       bluetooth_icon: 'AppKeyBluetoothIcon',
       battery_displayed_at: 'AppKeyBatteryDisplayedAt',
       temperature_unit: 'AppKeyTemperatureUnit',
+      weather_variable: 'AppKeyWeatherVariable',
       refresh_rate: 'AppKeyRefreshRate',
       rainbow_mode: 'AppKeyRainbowMode',
       vibrate_on_the_hour: 'AppKeyVibrateOnTheHour',
