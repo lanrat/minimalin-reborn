@@ -115,13 +115,13 @@ Pebble.addEventListener('ready', function (e) {
 });
 
 
+var configPageUrl = require('./config_page.js');
+
 Pebble.addEventListener('showConfiguration', function() {
-  var URL = 'https://lanrat.github.io/minimalin-reborn/';
   var config = Config('config');
   var params = config.load();
   params.platform = Pebble.getActiveWatchInfo().platform;
-  var query = '?config=' + encodeURIComponent(JSON.stringify(params));
-  Pebble.openURL(URL + query);
+  Pebble.openURL(configPageUrl + '#config=' + encodeURIComponent(JSON.stringify(params)));
 });
 
 Pebble.addEventListener('webviewclosed', function(e) {

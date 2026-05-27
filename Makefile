@@ -41,7 +41,7 @@ install:
 
 clean:
 	pebble clean
-	rm -f src/pkjs/build_config.js
+	rm -f src/pkjs/build_config.js src/pkjs/config_page.js
 
 size:
 	pebble analyze-size

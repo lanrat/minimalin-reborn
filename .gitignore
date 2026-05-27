@@ -8,3 +8,4 @@ resources/data/
 
 # Generated config files
 src/pkjs/build_config.js
+src/pkjs/config_page.js
