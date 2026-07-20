@@ -233,11 +233,23 @@ static bool times_conflicting(const tm * const time){
   return time->tm_hour % 12 == time->tm_min / 5;
 }
 
-static bool times_conflicting_north_or_south(const tm * const time){
-  if(!times_conflicting(time))
-    return false;
-  const int hour_mod_12 = time->tm_hour % 12;
-  return hour_mod_12 <= 1 || hour_mod_12 >= 11 || (hour_mod_12 >= 5 && hour_mod_12 <= 7);
+// Position for the merged "H:MM" text when both times share a spoke. During a
+// conflict both hands sit at or clockwise of the spoke (hour angle = 30h+m/2,
+// minute angle = 6m, both in [30h, 30h+25) when h == m/5), so nudging the text
+// counter-clockwise-perpendicular always clears them. The north/south spokes
+// (11,0,1 and 5,6,7) need no nudge: the text sits radially beyond the hand
+// tips there. The east/west spokes (2,3,4 and 8,9,10) also get pulled inward
+// so the wide merged text doesn't clip the display edge.
+static GPoint merged_time_point(const int index){
+  GPoint p = time_points[index];
+  if((index >= 2 && index <= 4) || (index >= 8 && index <= 10)){
+    const int32_t angle = index * TRIG_MAX_ANGLE / 12;
+    const int32_t sin_val = sin_lookup(angle);
+    const int32_t cos_val = cos_lookup(angle);
+    p.x += (int16_t)((-cos_val * TIME_CONFLICT_PERP - sin_val * TIME_CONFLICT_INSET) / TRIG_MAX_RATIO);
+    p.y += (int16_t)((-sin_val * TIME_CONFLICT_PERP + cos_val * TIME_CONFLICT_INSET) / TRIG_MAX_RATIO);
+  }
+  return p;
 }
 
 static void hour_time_update_proc(TextBlock * block){
@@ -247,22 +259,17 @@ static void hour_time_update_proc(TextBlock * block){
   char buffer[] = "00:00";
   const int hour = context->time->tm_hour;
   const int hour_mod_12 = hour % 12;
-  const GPoint block_center = time_points[hour_mod_12];
   const bool military_time = config_get_bool(config, ConfigKeyMilitaryTime);
   const int printed_hour = military_time ? hour : hour_mod_12 == 0 ? 12 : hour_mod_12;
-  if(times_conflicting_north_or_south(context->time)){
+  if(times_conflicting(context->time)){
     const int min = context->time->tm_min;
     snprintf(buffer, sizeof(buffer), "%d:%02d", printed_hour, min);
     text_block_set_text(block, buffer, color);
-    text_block_move(block, block_center);
+    text_block_move(block, merged_time_point(hour_mod_12));
   }else{
     snprintf(buffer, sizeof(buffer), "%d", printed_hour);
     text_block_set_text(block, buffer, color);
-    if(times_conflicting(context->time)){
-      text_block_move(block, GPoint(block_center.x, block_center.y - TIME_CONFLICT_OFFSET));
-    }else{
-      text_block_move(block, block_center);
-    }
+    text_block_move(block, time_points[hour_mod_12]);
   }
 }
 
@@ -272,17 +279,12 @@ static void minute_time_update_proc(TextBlock * block){
   const GColor color = config_get_color(config, ConfigKeyTimeColor);
   char buffer[] = "00";
   const int min = context->time->tm_min;
-  const GPoint block_center = time_points[min / 5];
-  if(times_conflicting_north_or_south(context->time)){
+  if(times_conflicting(context->time)){
     text_block_set_text(s_minute_text, "", color);
   }else{
     text_block_set_enabled(s_minute_text, true);
     snprintf(buffer, sizeof(buffer), "%02d", min);
-    if(times_conflicting(context->time)){
-      text_block_move(s_minute_text, GPoint(block_center.x, block_center.y + TIME_CONFLICT_OFFSET));
-    }else{
-      text_block_move(s_minute_text, block_center);
-    }
+    text_block_move(s_minute_text, time_points[min / 5]);
     text_block_set_text(s_minute_text, buffer, color);
   }
 }
