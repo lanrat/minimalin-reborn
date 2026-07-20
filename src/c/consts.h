@@ -44,8 +44,8 @@ static GPoint time_points[12] = {
   {44, 21}
 };
 #elif defined(PBL_PLATFORM_GABBRO)
-#define RAINBOW_HAND_OFFSET_X 5
-#define RAINBOW_HAND_OFFSET_Y 81
+#define RAINBOW_HAND_OFFSET_X 7
+#define RAINBOW_HAND_OFFSET_Y 78
 #define TIME_CONFLICT_OFFSET 14
 #define TICK_WIDTH 2
 #define HOUR_HAND_WIDTH 8

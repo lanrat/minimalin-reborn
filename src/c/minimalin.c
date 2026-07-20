@@ -98,13 +98,8 @@ static void mark_dirty_minute_hand_layer();
 static void fetch_step(Context * const context);
 
 static void update_current_time() {
-#ifdef SCREENSHOT
-  time_t screenshot_time = 1454278942;
-  s_current_time = gmtime(&screenshot_time);
-#else
   const time_t temp = time(NULL);
   s_current_time = localtime(&temp);
-#endif
   s_context.time = s_current_time;
 }
 
@@ -188,7 +183,11 @@ static void config_health_enabled_updated(DictionaryIterator * iter, Tuple * tup
   if(enabled){
     fetch_step(&s_context);
   }
+#ifndef SCREENSHOT
+  // In a SCREENSHOT build the steps block is force-enabled at load; don't let a
+  // config push disable it.
   text_block_set_enabled(s_steps_info, enabled);
+#endif
 }
 
 static void js_ready_callback(DictionaryIterator * iter, Tuple * tuple){
@@ -357,10 +356,15 @@ static void tick_layer_update_callback(Layer *layer, GContext *graphic_ctx) {
 // Weather
 
 static void weather_info_update_proc(TextBlock * block){
+  char info_buffer[10] = {0};
+#ifdef SCREENSHOT
+  // Render mock weather (icon 'a', -12°) so the block appears in screenshots,
+  // bypassing the received-weather validity/timeout check.
+  snprintf(info_buffer, sizeof(info_buffer), "%c%d°", 'a', -12);
+#else
   const Context * const context = (Context *) text_block_get_context(block);
   const Config * const config = context->config;
   const Weather weather = context->weather;
-  char info_buffer[10] = {0};
   const int timeout = (config_get_int(config, ConfigKeyRefreshRate) + 5) * 60;
   const int expiration =  weather.timestamp + timeout;
   const bool weather_valid = time(NULL) < expiration;
@@ -370,6 +374,7 @@ static void weather_info_update_proc(TextBlock * block){
     const int converted_temp = is_farhrenheit ? temp * 9 / 5 + 32 : temp;
     snprintf(info_buffer, sizeof(info_buffer), "%c%d°", weather.icon, converted_temp);
   }
+#endif
   const GColor info_color = config_get_color(s_config, ConfigKeyInfoColor);
   text_block_set_text(block, info_buffer, info_color);
 }
@@ -418,14 +423,22 @@ static void watch_info_update_proc(TextBlock * block){
   const Config * const config = context->config;
   char info_buffer[4] = {0};
   const BluetoothIcon bluetooth_icon = config_get_int(config, ConfigKeyBluetoothIcon);
+#ifdef SCREENSHOT
+  const bool bluetooth_disconneted = true;  // force the BT glyph on for screenshots
+#else
   const bool bluetooth_disconneted = !context->bluetooth_connected;
+#endif
   const bool bluetooth_icon_set = bluetooth_icon != NoIcon;
   if(bluetooth_disconneted && bluetooth_icon_set){
     strncat(info_buffer, bluetooth_icon == Bluetooth ? "z" : "Z", 2);
   }
+#ifdef SCREENSHOT
+  const bool battery_below_threshold = true;  // force the battery glyph on for screenshots
+#else
   const int battery_threshold = config_get_int(config, ConfigKeyBatteryDisplayedAt);
   const BatteryChargeState charge_state = context->charge_state;
   const bool battery_below_threshold = charge_state.charge_percent < battery_threshold;
+#endif
   if(battery_below_threshold){
     strncat(info_buffer, "w", 2);
   }
@@ -438,7 +451,11 @@ static void watch_info_update_proc(TextBlock * block){
 static void steps_info_update_proc(TextBlock * block){
   const Context * const context = (Context *) text_block_get_context(block);
   const Config * const config = context->config;
+#ifdef SCREENSHOT
+  const int steps = 6234;  // mock step count renders as "y6.2k" for screenshots
+#else
   const int steps = context->steps;
+#endif
   char step_text[16] = {0};
   const GColor info_color = config_get_color(config, ConfigKeyInfoColor);
   if(steps > 10000){
@@ -460,10 +477,16 @@ static void fetch_step(Context * const context){
 // Event handlers
 
 static void update_watch_info_layer_visibility(){
+#ifdef SCREENSHOT
+  // Keep the watch info block visible for screenshots regardless of BT/battery
+  // state (this runs at load and from the BT/battery handlers).
+  text_block_set_enabled(s_watch_info, true);
+#else
   const Config * const config = s_context.config;
   const bool battery_icon_visible = s_context.charge_state.charge_percent < config_get_int(config, ConfigKeyBatteryDisplayedAt);
   const bool bt_icon_visible = !s_context.bluetooth_connected && config_get_int(config, ConfigKeyBluetoothIcon) != NoIcon;
   text_block_set_enabled(s_watch_info, battery_icon_visible || bt_icon_visible);
+#endif
 }
 
 static void bt_handler(bool connected){
@@ -540,7 +563,11 @@ static void main_window_load(Window *window) {
   text_block_set_update_proc(s_date_info, date_info_update_proc);
 
   s_steps_info = quadrants_add_text_block(s_quadrants, s_root_layer, s_font, High, s_current_time);
+#ifdef SCREENSHOT
+  text_block_set_enabled(s_steps_info, true);  // force the steps block on for screenshots
+#else
   text_block_set_enabled(s_steps_info, config_get_bool(s_config, ConfigKeyHealthEnabled));
+#endif
   text_block_set_context(s_steps_info, &s_context);
   text_block_set_update_proc(s_steps_info, steps_info_update_proc);
   health_service_events_subscribe(step_handler, &s_context);

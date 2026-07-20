@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-dt=$(date -I)
 
 function screenshots(){
   mkdir -p "screenshots/${2}"
@@ -9,7 +8,8 @@ function screenshots(){
   do
     for minute in $(seq 0 10 50)
     do
-      export PEBBLE_QEMU_TIME="${dt}T$hour:$minute:00"
+      # pebble-tool v5 dropped PEBBLE_QEMU_TIME; emu-set-time sets the RTC live
+      pebble emu-set-time --emulator "$2" "$hour:$minute:00" || exit 1
       pebble screenshot --emulator "$2" --no-correction "screenshots/${2}/${1}${i}.png" || exit 1
       i=$((i+1))
     done
@@ -32,6 +32,6 @@ fi
 #screenshots "$prefix" "diorite"
 screenshots "$prefix" "emery"
 #screenshots "$prefix" "flint"
-#screenshots "$prefix" "gabbro"
+screenshots "$prefix" "gabbro"
 
 wait
