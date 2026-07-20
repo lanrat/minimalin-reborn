@@ -32,7 +32,8 @@ typedef enum {
   AppKeyVibrateOnTheHour,
   AppKeyMilitaryTime,
   AppKeyHealthEnabled,
-  AppKeyBatteryDisplayedAt
+  AppKeyBatteryDisplayedAt,
+  AppKeyQuietTimeVisible
 } AppKey;
 
 typedef enum {
@@ -96,6 +97,7 @@ static tm * s_current_time;
 static void schedule_weather_request(int timeout);
 static void mark_dirty_minute_hand_layer();
 static void fetch_step(Context * const context);
+static void update_watch_info_layer_visibility();
 
 static void update_current_time() {
   const time_t temp = time(NULL);
@@ -148,6 +150,12 @@ static void config_bluetooth_icon_updated(DictionaryIterator * iter, Tuple * tup
 
 static void config_battery_displayed_at_updated(DictionaryIterator * iter, Tuple * tuple){
   config_set_int(s_config, ConfigKeyBatteryDisplayedAt, tuple->value->int32);
+  text_block_mark_dirty(s_watch_info);
+}
+
+static void config_quiet_time_visible_updated(DictionaryIterator * iter, Tuple * tuple){
+  config_set_bool(s_config, ConfigKeyQuietTimeVisible, tuple->value->int8);
+  update_watch_info_layer_visibility();
   text_block_mark_dirty(s_watch_info);
 }
 
@@ -416,7 +424,7 @@ static void schedule_weather_request(const int timeout){
   }
 }
 
-// Battery + Bluetooth
+// Battery + Bluetooth + Quiet Time
 
 static void watch_info_update_proc(TextBlock * block){
   const Context * const context = (Context *) text_block_get_context(block);
@@ -441,6 +449,14 @@ static void watch_info_update_proc(TextBlock * block){
 #endif
   if(battery_below_threshold){
     strncat(info_buffer, "w", 2);
+  }
+#ifdef SCREENSHOT
+  const bool quiet_time_visible = true;  // force the quiet-time glyph on for screenshots
+#else
+  const bool quiet_time_visible = quiet_time_is_active() && config_get_bool(config, ConfigKeyQuietTimeVisible);
+#endif
+  if(quiet_time_visible){
+    strncat(info_buffer, "q", 2);
   }
   const GColor info_color = config_get_color(s_config, ConfigKeyInfoColor);
   text_block_set_text(block, info_buffer, info_color);
@@ -485,7 +501,8 @@ static void update_watch_info_layer_visibility(){
   const Config * const config = s_context.config;
   const bool battery_icon_visible = s_context.charge_state.charge_percent < config_get_int(config, ConfigKeyBatteryDisplayedAt);
   const bool bt_icon_visible = !s_context.bluetooth_connected && config_get_int(config, ConfigKeyBluetoothIcon) != NoIcon;
-  text_block_set_enabled(s_watch_info, battery_icon_visible || bt_icon_visible);
+  const bool quiet_icon_visible = quiet_time_is_active() && config_get_bool(config, ConfigKeyQuietTimeVisible);
+  text_block_set_enabled(s_watch_info, battery_icon_visible || bt_icon_visible || quiet_icon_visible);
 #endif
 }
 
@@ -534,6 +551,10 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed){
   text_block_mark_dirty(s_minute_text);
   text_block_mark_dirty(s_date_info);
   text_block_mark_dirty(s_steps_info);
+
+  // Quiet Time has no event to subscribe to; refresh its icon on the minute.
+  update_watch_info_layer_visibility();
+  text_block_mark_dirty(s_watch_info);
 
   quadrants_update(s_quadrants, s_current_time);
 }
@@ -674,6 +695,7 @@ static void init() {
     { AppKeyDateDisplayed, config_date_displayed_updated },
     { AppKeyRainbowMode, config_rainbow_mode_updated },
     { AppKeyBluetoothIcon, config_bluetooth_icon_updated },
+    { AppKeyQuietTimeVisible, config_quiet_time_visible_updated },
     { AppKeyRefreshRate, config_refresh_rate_updated },
     { AppKeyTemperatureUnit, config_temperature_unit_updated },
     { AppKeyWeatherEnabled, config_weather_enabled_updated },
@@ -683,7 +705,7 @@ static void init() {
     { AppKeyHealthEnabled, config_health_enabled_updated },
     { AppKeyBatteryDisplayedAt, config_battery_displayed_at_updated }
   };
-  s_messenger = messenger_create(17, messenger_callback, messages);
+  s_messenger = messenger_create(ARRAY_LENGTH(messages), messenger_callback, messages);
   s_weather_request_timeout = 0;
   s_js_ready = false;
 #if defined(PBL_PLATFORM_GABBRO)

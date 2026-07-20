@@ -124,6 +124,7 @@
     {{#if batteryIconEnabled }}
       <Tabs source="{{ batteryDisplayedAtSource }}" value="{{ battery_displayed_at }}" header="Display a battery icon when battery goes below"/>
     {{/if}}
+    <Toggle value="{{ quiet_time_visible }}" label="Quiet Time icon" footer="Show an icon while Quiet Time is active"/>
     <div class="open-source">
       Minimalin Reborn is open source software. You can view the source code for free <a href="https://github.com/lanrat/minimalin-reborn">here</a>.
     </div>
@@ -451,6 +452,9 @@
        if(this.get("battery_displayed_at") != -1){
          info += "w";
        }
+       if(this.get("quiet_time_visible")){
+         info += "q";
+       }
        return info;
      },
      themeSource: function(){
@@ -570,6 +574,7 @@
          vibrate_on_the_hour: this.get('vibrate_on_the_hour'),
          rainbow_mode: this.get('rainbow_mode'),
          military_time: this.get('military_time'),
+         quiet_time_visible: this.get('quiet_time_visible'),
          themes: this.get('themes')
        };
        var returnTo = query('return_to', 'pebblejs://close#');

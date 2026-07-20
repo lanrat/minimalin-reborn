@@ -24,6 +24,7 @@
       "AppKeyJsReady": 16,
       "AppKeyMilitaryTime": 18,
       "AppKeyMinuteHandColor": 0,
+      "AppKeyQuietTimeVisible": 21,
       "AppKeyRainbowMode": 4,
       "AppKeyRefreshRate": 9,
       "AppKeyTemperatureUnit": 8,
@@ -50,19 +51,19 @@
           "type": "png"
         },
         {
-          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "characterRegex": "[0-9:°a-izqA-IZk.yw\\-]",
           "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_23",
           "type": "font"
         },
         {
-          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "characterRegex": "[0-9:°a-izqA-IZk.yw\\-]",
           "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_28",
           "type": "font"
         },
         {
-          "characterRegex": "[0-9:°a-izA-IZk.yw\\-]",
+          "characterRegex": "[0-9:°a-izqA-IZk.yw\\-]",
           "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_33",
           "type": "font"
