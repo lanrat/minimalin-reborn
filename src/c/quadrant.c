@@ -5,7 +5,16 @@
 
 #define QUADRANT_COUNT 4
 #define POSTIONS_COUNT 4
-#define BLOCK_SIZE GSize(38, 20)
+// Hand-text collision rectangle. Scales with the platform font (see
+// TEXT_BLOCK_SIZE / minimalin.c font loading) so larger fonts are dodged
+// by the clock hands correctly.
+#if defined(PBL_PLATFORM_GABBRO)
+  #define BLOCK_SIZE GSize(55, 29)  // FONT_NUPE_33, scaled 1.444x from chalk
+#elif defined(PBL_PLATFORM_EMERY)
+  #define BLOCK_SIZE GSize(46, 24)  // FONT_NUPE_28
+#else
+  #define BLOCK_SIZE GSize(38, 20)  // FONT_NUPE_23
+#endif
 #define QUADRANT(blck, prio, pos) (Quadrant) { .block = blck, .priority = prio, .position = pos }
 #define BLOCK(quadrants, index) quadrants->quadrants[index]->block
 #define PRIORITY(quadrants, index) quadrants->quadrants[index]->priority

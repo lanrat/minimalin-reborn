@@ -44,17 +44,21 @@ larger text from the 33pt font.
 **Relevant code:** `src/c/quadrant.c` gabbro `SOUTH_INFO_CENTER`,
 `NORTH_INFO_CENTER`, `EAST_INFO_CENTER`, `WEST_INFO_CENTER`.
 
-## Text Block Collision Size
+## Text Block Render + Collision Size (RESOLVED)
 
-**Current state:** `BLOCK_SIZE` in `src/c/quadrant.c` is `GSize(38, 20)` for all
-platforms. With the 33pt font on gabbro, text blocks are physically larger than this
-collision rectangle accounts for.
+**Was:** Both the render frame `TEXT_BLOCK_SIZE` (`src/c/text_block.h`) and the
+collision rectangle `BLOCK_SIZE` (`src/c/quadrant.c`) were fixed at `GSize(70, 23)`
+and `GSize(38, 20)` for all platforms. With the 33pt font on gabbro, the render
+frame was too small: `graphics_draw_text` word-wrapped the trailing glyph onto a
+clipped second line, so temperature/steps showed a stray "-" (e.g. `2.2-`, `6-`).
 
-**What needs to be done:** Make `BLOCK_SIZE` platform-conditional or scale it for
-gabbro (approximately `GSize(55, 29)` based on the 1.444x scale factor). This
-affects the hand-text collision detection in the quadrant system.
+**Fix:** Both are now platform-conditional, scaled to match the font
+(`GSize(105, 34)` render / `GSize(55, 29)` collision on gabbro; intermediate values
+for emery's 28pt). Verify on-device that the widened blocks still position well and
+don't overlap at diagonal hand positions.
 
-**Relevant code:** `src/c/quadrant.c` line 8, `#define BLOCK_SIZE GSize(38, 20)`.
+**Relevant code:** `src/c/text_block.h` `TEXT_BLOCK_SIZE`, `src/c/quadrant.c`
+`BLOCK_SIZE`.
 
 ## Font Size
 

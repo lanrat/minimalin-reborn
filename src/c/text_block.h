@@ -2,7 +2,16 @@
 
 #include "pebble.h"
 
-#define TEXT_BLOCK_SIZE GSize(70, 23)
+// The render frame must scale with the platform font (see minimalin.c font
+// loading). If it doesn't, the larger fonts overflow the box and word-wrap
+// clips the trailing glyph onto a hidden second line, which shows as a "-".
+#if defined(PBL_PLATFORM_GABBRO)
+  #define TEXT_BLOCK_SIZE GSize(105, 34)  // FONT_NUPE_33, scaled 1.444x from chalk
+#elif defined(PBL_PLATFORM_EMERY)
+  #define TEXT_BLOCK_SIZE GSize(86, 28)   // FONT_NUPE_28
+#else
+  #define TEXT_BLOCK_SIZE GSize(70, 23)   // FONT_NUPE_23
+#endif
 
 typedef struct TextBlock TextBlock;
 
