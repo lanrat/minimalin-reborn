@@ -64,6 +64,9 @@ static Window * s_main_window;
 static Layer * s_root_layer;
 static GRect s_root_layer_bounds;
 static GPoint s_center;
+// Height in px of the system overlay (Timeline Quick View) covering the bottom
+// of the screen. 0 when nothing is obstructing us.
+static int s_obstruction_height;
 
 static TextBlock * s_weather_info;
 static TextBlock * s_date_info;
@@ -252,6 +255,64 @@ static GPoint merged_time_point(const int index){
   return p;
 }
 
+// True when a text block centered here would reach into the strip covered by a
+// system overlay. The overlay always grows up from the bottom of the screen.
+static bool point_obstructed(const GPoint center){
+  if(s_obstruction_height <= 0){
+    return false;
+  }
+  const GRect frame = grect_from_center_and_size(center, TEXT_BLOCK_SIZE);
+  return frame.origin.y + frame.size.h > s_root_layer_bounds.size.h - s_obstruction_height;
+}
+
+// Merge the hour and minute into a single "H:MM" when they share a spoke, or
+// when either spoke has been swallowed by an overlay. The merged string states
+// the time in full, so unlike a lone "6" it can be relocated somewhere visible
+// without lying about where a hand is pointing.
+static bool times_merged(const tm * const time){
+  return times_conflicting(time)
+    || point_obstructed(time_points[time->tm_hour % 12])
+    || point_obstructed(time_points[time->tm_min / 5]);
+}
+
+// Spokes to relocate the merged time onto, nearest the top of the dial first.
+// The bottom spokes (5, 6, 7) are omitted: they are the ones an overlay covers.
+static const int merge_fallback_spokes[] = { 0, 11, 1, 10, 2, 9, 3 };
+
+// Pick a visible spoke for the merged time that neither hand crosses. Falls
+// back to the highest visible spoke if every candidate is crossed, since a hand
+// drawn over the text still beats text hidden under the overlay.
+static GPoint obstructed_merge_point(const tm * const time){
+  const int hour_angle = angle_hour(time, true);
+  const Segment hour_hand = SEGMENT(s_center, gpoint_on_circle(s_center, hour_angle, HOUR_HAND_RADIUS));
+  const int minute_angle = angle_minute(time);
+  const Segment minute_hand = SEGMENT(s_center, gpoint_on_circle(s_center, minute_angle, MINUTE_HAND_RADIUS));
+  GPoint fallback = time_points[0];
+  bool have_fallback = false;
+  for(int i = 0; i < (int) ARRAY_LENGTH(merge_fallback_spokes); i++){
+    const GPoint p = merged_time_point(merge_fallback_spokes[i]);
+    if(point_obstructed(p)){
+      continue;
+    }
+    if(!have_fallback){
+      fallback = p;
+      have_fallback = true;
+    }
+    const GRect frame = grect_from_center_and_size(p, TEXT_BLOCK_SIZE);
+    if(!intersect(hour_hand, frame) && !intersect(minute_hand, frame)){
+      return p;
+    }
+  }
+  return fallback;
+}
+
+// Where the merged time goes: its own spoke when that is visible, otherwise the
+// best spoke still clear of the overlay.
+static GPoint merged_time_point_visible(const tm * const time){
+  const GPoint natural = merged_time_point(time->tm_hour % 12);
+  return point_obstructed(natural) ? obstructed_merge_point(time) : natural;
+}
+
 static void hour_time_update_proc(TextBlock * block){
   const Context * const context = (Context *) text_block_get_context(block);
   const Config * const config = context->config;
@@ -261,11 +322,11 @@ static void hour_time_update_proc(TextBlock * block){
   const int hour_mod_12 = hour % 12;
   const bool military_time = config_get_bool(config, ConfigKeyMilitaryTime);
   const int printed_hour = military_time ? hour : hour_mod_12 == 0 ? 12 : hour_mod_12;
-  if(times_conflicting(context->time)){
+  if(times_merged(context->time)){
     const int min = context->time->tm_min;
     snprintf(buffer, sizeof(buffer), "%d:%02d", printed_hour, min);
     text_block_set_text(block, buffer, color);
-    text_block_move(block, merged_time_point(hour_mod_12));
+    text_block_move(block, merged_time_point_visible(context->time));
   }else{
     snprintf(buffer, sizeof(buffer), "%d", printed_hour);
     text_block_set_text(block, buffer, color);
@@ -279,7 +340,7 @@ static void minute_time_update_proc(TextBlock * block){
   const GColor color = config_get_color(config, ConfigKeyTimeColor);
   char buffer[] = "00";
   const int min = context->time->tm_min;
-  if(times_conflicting(context->time)){
+  if(times_merged(context->time)){
     text_block_set_text(s_minute_text, "", color);
   }else{
     text_block_set_enabled(s_minute_text, true);
@@ -572,9 +633,35 @@ const AnimationImplementation implementation = {
   .update = implementation_update,
 };
 
+// Unobstructed area (Timeline Quick View). Aplite stubs the whole service out
+// to a no-op, so the handlers would be dead code there.
+#if PBL_API_EXISTS(unobstructed_area_service_subscribe)
+#define HAS_UNOBSTRUCTED_AREA 1
+
+static void refresh_obstruction(const int obstruction_height){
+  if(obstruction_height == s_obstruction_height){
+    return;
+  }
+  s_obstruction_height = obstruction_height;
+  text_block_mark_dirty(s_hour_text);
+  text_block_mark_dirty(s_minute_text);
+}
+
+// Move the time before the overlay slides in rather than after, so it is never
+// briefly buried mid-animation.
+static void unobstructed_will_change(GRect final_unobstructed_screen_area, void * context){
+  refresh_obstruction(s_root_layer_bounds.size.h - final_unobstructed_screen_area.size.h);
+}
+
+static void unobstructed_did_change(void * context){
+  refresh_obstruction(s_root_layer_bounds.size.h - layer_get_unobstructed_bounds(s_root_layer).size.h);
+}
+#endif
+
 static void main_window_load(Window *window) {
   s_root_layer = window_get_root_layer(window);
   s_root_layer_bounds = layer_get_bounds(s_root_layer);
+  s_obstruction_height = s_root_layer_bounds.size.h - layer_get_unobstructed_bounds(s_root_layer).size.h;
   s_center = grect_center_point(&s_root_layer_bounds);
   update_current_time();
   window_set_background_color(window, config_get_color(s_config, ConfigKeyBackgroundColor));
@@ -647,6 +734,12 @@ static void main_window_load(Window *window) {
   mark_dirty_minute_hand_layer();
 
   tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
+#ifdef HAS_UNOBSTRUCTED_AREA
+  unobstructed_area_service_subscribe((UnobstructedAreaHandlers) {
+    .will_change = unobstructed_will_change,
+    .did_change = unobstructed_did_change
+  }, NULL);
+#endif
 
   quadrants_update(s_quadrants, s_current_time);
 
@@ -677,6 +770,7 @@ static void main_window_unload(Window *window) {
     health_service_events_unsubscribe();
   }
   bluetooth_connection_service_unsubscribe();
+  unobstructed_area_service_unsubscribe();
 
   s_quadrants = quadrants_destroy(s_quadrants);
 
