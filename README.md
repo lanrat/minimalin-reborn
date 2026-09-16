@@ -69,6 +69,20 @@ git push --tags
 # The GitHub Action will automatically build and create the release with the .pbw file
 ```
 
+### Appstore publishing secrets
+
+On a tag push the release workflow also publishes the new release to the Pebble
+(repebble) and Rebble appstores. Each store's step is skipped when its secret is
+missing, so the build and GitHub release still work without them.
+
+| Secret | Store | How to get it |
+| --- | --- | --- |
+| `PEBBLE_FIREBASE_REFRESH_TOKEN` | apps.repebble.com | Run `pebble login`, then copy `refresh_token` from `~/.pebble-sdk/oauth_firebase/firebase_oauth_storage.json` |
+| `REBBLE_ACCESS_TOKEN` | apps.rebble.io | Log in to [dev-portal.rebble.io](https://dev-portal.rebble.io/) and copy the bearer token the portal sends in its `Authorization` header |
+
+Both stores reject a release whose version is not greater than the latest
+published one, so the tag has to bump the version.
+
 ## Credits
 
 Weather data provided by [Open-Meteo](https://open-meteo.com/).

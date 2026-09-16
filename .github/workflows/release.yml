@@ -9,9 +9,19 @@ on:
 permissions:
   contents: write
 
+env:
+  # Rebble has no publish CLI, so its upload needs the store's app ID in the URL.
+  # (The Pebble/repebble publish below resolves the app from the PBW's UUID.)
+  REBBLE_APP_ID: 63792649c6c24a000a815e70
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Job level so the publish steps can test them in their `if:` conditions and
+    # skip cleanly when a store's credentials are not configured.
+    env:
+      PEBBLE_FIREBASE_REFRESH_TOKEN: ${{ secrets.PEBBLE_FIREBASE_REFRESH_TOKEN }}
+      REBBLE_ACCESS_TOKEN: ${{ secrets.REBBLE_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v6
 
@@ -38,11 +48,13 @@ jobs:
           name: minimalin-reborn
           path: ${{ github.workspace }}/build/*.pbw
 
-      - name: Rename PBW with version
+      # Copy rather than move: the unversioned PBW is what the appstore
+      # publish steps below upload.
+      - name: Copy PBW with version
         if: github.ref_type == 'tag'
         run: |
           for f in "${{ github.workspace }}"/build/*.pbw; do
-            mv "$f" "${f%.pbw}-${{ github.ref_name }}.pbw"
+            cp "$f" "${f%.pbw}-${{ github.ref_name }}.pbw"
           done
 
       - name: Release
@@ -51,4 +63,53 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            ${{ github.workspace }}/build/*.pbw
+            ${{ github.workspace }}/build/*-${{ github.ref_name }}.pbw
+
+      - name: Collect release notes
+        if: github.ref_type == 'tag'
+        run: |
+          # Annotated tag message if there is one, otherwise just the tag name.
+          notes="$(git for-each-ref "refs/tags/${{ github.ref_name }}" --format='%(contents:subject)')"
+          [ -n "$notes" ] || notes="${{ github.ref_name }}"
+          {
+            echo "RELEASE_NOTES<<NOTES_EOF"
+            echo "$notes"
+            echo "NOTES_EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: Publish to Pebble appstore
+        if: github.ref_type == 'tag' && env.PEBBLE_FIREBASE_REFRESH_TOKEN != ''
+        env:
+          # Public Firebase web API key baked into pebble-tool; override only if it changes.
+          # cspell:disable-next-line
+          PEBBLE_FIREBASE_API_KEY: ${{ vars.PEBBLE_FIREBASE_API_KEY || 'AIzaSyBZ9Cdvwwv9At2lPmc8TxyyEqSXGXejGvc' }}
+        run: |
+          # Firebase ID tokens live an hour, so exchange the long-lived refresh
+          # token for a fresh one at publish time.
+          id_token="$(curl -sS --fail-with-body \
+            "https://securetoken.googleapis.com/v1/token?key=${PEBBLE_FIREBASE_API_KEY}" \
+            -d grant_type=refresh_token \
+            -d "refresh_token=${PEBBLE_FIREBASE_REFRESH_TOKEN}" | jq -r .id_token)"
+          if [ -z "$id_token" ] || [ "$id_token" = "null" ]; then
+            echo "Failed to exchange PEBBLE_FIREBASE_REFRESH_TOKEN for an ID token" >&2
+            exit 1
+          fi
+          echo "::add-mask::$id_token"
+          # --no-gif-all-platforms skips emulator capture (no emulator in CI) and
+          # leaves the existing store screenshots alone.
+          PEBBLE_FIREBASE_ID_TOKEN="$id_token" pebble publish \
+            --non-interactive \
+            --no-gif-all-platforms \
+            --is-published \
+            --release-notes "$RELEASE_NOTES"
+
+      - name: Publish to Rebble appstore
+        if: github.ref_type == 'tag' && env.REBBLE_ACCESS_TOKEN != ''
+        run: |
+          response="$(curl -sS --fail-with-body -X POST \
+            "https://appstore-api.rebble.io/api/dp/app/${REBBLE_APP_ID}/release" \
+            -H "Authorization: Bearer ${REBBLE_ACCESS_TOKEN}" \
+            --form-string "release_notes=${RELEASE_NOTES}" \
+            -F "pbw=@${{ github.workspace }}/build/minimalin-reborn.pbw")"
+          echo "$response"
+          [ "$(echo "$response" | jq -r '.success // false')" = "true" ]

@@ -8,6 +8,8 @@
     // words - list of words to be always considered correct
     "words": [
         "appmessage",
+        "appstore",
+        "appstores",
         "cmocka",
         "Gringer",
         "killall",
@@ -17,6 +19,7 @@
         "pkjs",
         "Ractive",
         "Rebble",
+        "repebble",
         "softprops",
         "watchapp",
         "watchface",
