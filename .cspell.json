@@ -14,9 +14,11 @@
         "Gringer",
         "killall",
         "lanrat",
+        "libpebble",
         "minimalin",
         "Nupe",
         "pkjs",
+        "PYTHONWARNINGS",
         "Ractive",
         "Rebble",
         "repebble",
@@ -24,7 +26,8 @@
         "watchapp",
         "watchface",
         "Webfont",
-        "webviewclosed"
+        "webviewclosed",
+        "Wexpansion"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.

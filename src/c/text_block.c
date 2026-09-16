@@ -15,11 +15,11 @@ static void text_block_update_proc(struct Layer *layer, GContext *ctx){
     text_block->update_proc(text_block);
   }
   if(text_block_get_ready(text_block) && text_block_get_enabled(text_block)){
+    GRect frame = text_block->frame;
+#ifdef HIGH_DPI_INFO
     // update_proc above may have added or dropped the second line, so measure
     // it now: with one present, both lines straddle the block's center.
     const int sub_height = text_block_sub_height(text_block);
-    GRect frame = text_block->frame;
-#ifdef HIGH_DPI_INFO
     frame.origin.y += text_block->sub_above ? sub_height / 2 : -sub_height / 2;
 #endif
     graphics_context_set_text_color(ctx, text_block->color);

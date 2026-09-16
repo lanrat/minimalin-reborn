@@ -37,6 +37,12 @@ def configure(ctx):
 
     ctx.load('pebble_sdk')
 
+    # The SDK's linker script emits one RWX PT_LOAD segment, which binutils 2.39+
+    # warns about on every link. That layout is expected for this target, so quiet
+    # the warning rather than let it bury real ones.
+    for platform in ctx.env.TARGET_PLATFORMS:
+        ctx.all_envs[platform].append_value('LINKFLAGS', '-Wl,--no-warn-rwx-segments')
+
 
 def build(ctx):
     ctx.load('pebble_sdk')

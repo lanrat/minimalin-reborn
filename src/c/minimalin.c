@@ -711,7 +711,9 @@ const AnimationImplementation implementation = {
 
 // Unobstructed area (Timeline Quick View). Aplite stubs the whole service out
 // to a no-op, so the handlers would be dead code there.
-#if PBL_API_EXISTS(unobstructed_area_service_subscribe)
+// This is what PBL_API_EXISTS() expands to; spelled out because the macro hides
+// a `defined` inside an expansion, which -Wexpansion-to-defined flags.
+#if defined(_PBL_API_EXISTS_unobstructed_area_service_subscribe)
 #define HAS_UNOBSTRUCTED_AREA 1
 
 static void refresh_obstruction(const int obstruction_height){

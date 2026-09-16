@@ -29,6 +29,10 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: auto
+          # There are no Python dependency files here -- pebble-tool is installed
+          # by name -- so there is nothing to key the cache on. Empty means a
+          # static key, which is what we want (and silences a warning about it).
+          cache-dependency-glob: ''
 
       - name: Install Pebble SDK
         run: |
@@ -36,6 +40,10 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install Pebble SDK dependencies
+        env:
+          # libpebble2 has invalid escape sequences that Python 3.12 flags while
+          # byte-compiling it. Upstream's problem, not ours.
+          PYTHONWARNINGS: ignore::SyntaxWarning
         run: |
           pebble sdk install latest
 
@@ -58,7 +66,7 @@ jobs:
           done
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         if: github.ref_type == 'tag'
         with:
           generate_release_notes: true
