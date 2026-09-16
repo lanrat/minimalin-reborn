@@ -155,7 +155,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
       rainbow_mode: 'AppKeyRainbowMode',
       vibrate_on_the_hour: 'AppKeyVibrateOnTheHour',
       military_time: 'AppKeyMilitaryTime',
-      quiet_time_visible: 'AppKeyQuietTimeVisible'
+      quiet_time_visible: 'AppKeyQuietTimeVisible',
+      extra_detail: 'AppKeyExtraDetail'
     };
     var dict = { AppKeyConfig: 1 };
     for(var key in mapping){

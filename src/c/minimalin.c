@@ -35,7 +35,8 @@ typedef enum {
   AppKeyBatteryDisplayedAt,
   AppKeyQuietTimeVisible,
   AppKeyWeatherHigh,
-  AppKeyWeatherLow
+  AppKeyWeatherLow,
+  AppKeyExtraDetail
 } AppKey;
 
 typedef enum {
@@ -165,6 +166,17 @@ static void config_battery_displayed_at_updated(DictionaryIterator * iter, Tuple
   config_set_int(s_config, ConfigKeyBatteryDisplayedAt, tuple->value->int32);
   text_block_mark_dirty(s_watch_info);
 }
+
+#ifdef HIGH_DPI_INFO
+static void config_extra_detail_updated(DictionaryIterator * iter, Tuple * tuple){
+  config_set_bool(s_config, ConfigKeyExtraDetail, tuple->value->int8);
+  // The blocks pick up (or drop) their second line on the redraw these mark.
+  // Their collision boxes only shrink or grow once that redraw has happened, so
+  // the quadrant layout catches up on the next minute tick.
+  text_block_mark_dirty(s_date_info);
+  text_block_mark_dirty(s_weather_info);
+}
+#endif
 
 static void config_quiet_time_visible_updated(DictionaryIterator * iter, Tuple * tuple){
   config_set_bool(s_config, ConfigKeyQuietTimeVisible, tuple->value->int8);
@@ -385,12 +397,16 @@ static void date_info_update_proc(TextBlock * block){
     // weekday is the one piece of text on the face that has to come from a
     // system font.
     char weekday_buffer[8] = {0};
-    strftime(weekday_buffer, sizeof(weekday_buffer), "%a", context->time);
-    for(char * c = weekday_buffer; *c != '\0'; c++){
-      if(*c >= 'a' && *c <= 'z'){
-        *c -= 'a' - 'A';
+    if(config_get_bool(config, ConfigKeyExtraDetail)){
+      strftime(weekday_buffer, sizeof(weekday_buffer), "%a", context->time);
+      for(char * c = weekday_buffer; *c != '\0'; c++){
+        if(*c >= 'a' && *c <= 'z'){
+          *c -= 'a' - 'A';
+        }
       }
     }
+    // Always set it: an empty string is how the second line goes away again
+    // when the setting is turned off.
     text_block_set_sub_text(block, weekday_buffer, date_color);
 #endif
   }
@@ -472,13 +488,16 @@ static void weather_info_update_proc(TextBlock * block){
   // two numbers are spaced apart. The degree sign is left to the current
   // temperature above them.
   char range_buffer[12] = {0};
+  const bool extra_detail = config_get_bool(s_config, ConfigKeyExtraDetail);
 #endif
 #ifdef SCREENSHOT
   // Render mock weather (icon 'a', -12°) so the block appears in screenshots,
   // bypassing the received-weather validity/timeout check.
   snprintf(info_buffer, sizeof(info_buffer), "%c%d°", 'a', -12);
 #ifdef HIGH_DPI_INFO
-  snprintf(range_buffer, sizeof(range_buffer), "%d %d", -18, -4);
+  if(extra_detail){
+    snprintf(range_buffer, sizeof(range_buffer), "%d %d", -18, -4);
+  }
 #endif
 #else
   const Context * const context = (Context *) text_block_get_context(block);
@@ -490,7 +509,7 @@ static void weather_info_update_proc(TextBlock * block){
   if(weather_valid){
     snprintf(info_buffer, sizeof(info_buffer), "%c%d°", weather.icon, converted_temperature(config, weather.temperature));
 #ifdef HIGH_DPI_INFO
-    if(weather.has_range){
+    if(extra_detail && weather.has_range){
       snprintf(range_buffer, sizeof(range_buffer), "%d %d",
                converted_temperature(config, weather.low),
                converted_temperature(config, weather.high));
@@ -501,6 +520,8 @@ static void weather_info_update_proc(TextBlock * block){
   const GColor info_color = config_get_color(s_config, ConfigKeyInfoColor);
   text_block_set_text(block, info_buffer, info_color);
 #ifdef HIGH_DPI_INFO
+  // Empty when the setting is off or the forecast is missing, which is how the
+  // second line disappears again.
   text_block_set_sub_text(block, range_buffer, info_color);
 #endif
 }
@@ -860,7 +881,10 @@ static void init() {
     { AppKeyVibrateOnTheHour, config_hourly_vibrate_updated },
     { AppKeyMilitaryTime, config_military_time_updated },
     { AppKeyHealthEnabled, config_health_enabled_updated },
-    { AppKeyBatteryDisplayedAt, config_battery_displayed_at_updated }
+    { AppKeyBatteryDisplayedAt, config_battery_displayed_at_updated },
+#ifdef HIGH_DPI_INFO
+    { AppKeyExtraDetail, config_extra_detail_updated }
+#endif
   };
   s_messenger = messenger_create(ARRAY_LENGTH(messages), messenger_callback, messages);
   s_weather_request_timeout = 0;

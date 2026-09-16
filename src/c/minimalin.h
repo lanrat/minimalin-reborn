@@ -20,10 +20,11 @@ typedef enum {
   ConfigKeyMilitaryTime,
   ConfigKeyHealthEnabled,
   ConfigKeyBatteryDisplayedAt,
-  ConfigKeyQuietTimeVisible
+  ConfigKeyQuietTimeVisible,
+  ConfigKeyExtraDetail
 } ConfigKey;
 
-#define CONF_SIZE 17
+#define CONF_SIZE 18
 
 
 #ifndef CONFIG_BLUETOOTH_ICON
@@ -62,5 +63,8 @@ ConfValue CONF_DEFAULTS[CONF_SIZE] = {
   { .key = ConfigKeyMilitaryTime, .type = BoolConf, .value = { .boolean = CONFIG_MILITARY_TIME } },
   { .key = ConfigKeyHealthEnabled, .type = BoolConf, .value = { .boolean = false } },
   { .key = ConfigKeyBatteryDisplayedAt, .type = IntConf, .value = { .integer = -1 } },
-  { .key = ConfigKeyQuietTimeVisible, .type = BoolConf, .value = { .boolean = true } }
+  { .key = ConfigKeyQuietTimeVisible, .type = BoolConf, .value = { .boolean = true } },
+  // Stays last: config_load fills entries past the end of a shorter persisted
+  // blob from the defaults, so appending is what keeps existing watches working.
+  { .key = ConfigKeyExtraDetail, .type = BoolConf, .value = { .boolean = true } }
 };
