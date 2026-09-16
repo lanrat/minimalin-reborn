@@ -32,7 +32,9 @@
       "AppKeyVibrateOnTheHour": 17,
       "AppKeyWeatherEnabled": 10,
       "AppKeyWeatherFailed": 14,
+      "AppKeyWeatherHigh": 22,
       "AppKeyWeatherIcon": 13,
+      "AppKeyWeatherLow": 23,
       "AppKeyWeatherRequest": 15,
       "AppKeyWeatherTemperature": 12
     },
@@ -54,6 +56,16 @@
           "characterRegex": "[0-9:°a-izqA-IZk.yw\\-]",
           "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_23",
+          "type": "font"
+        },
+        {
+          "characterRegex": "[0-9 \\-]",
+          "file": "fonts/nupe.ttf",
+          "name": "FONT_NUPE_18",
+          "targetPlatforms": [
+            "emery",
+            "gabbro"
+          ],
           "type": "font"
         },
         {

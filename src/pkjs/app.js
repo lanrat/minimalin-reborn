@@ -56,7 +56,10 @@ var Weather = function(pebble){
 
   var fetchWeather = function(latitude, longitude) {
     var req = new XMLHttpRequest();
-    var url = BASE_URL + '?latitude=' + latitude + '&longitude=' + longitude + '&current=temperature_2m,weather_code,is_day';
+    // timezone=auto so the daily high/low cover the local day, not a UTC one.
+    var url = BASE_URL + '?latitude=' + latitude + '&longitude=' + longitude +
+      '&current=temperature_2m,weather_code,is_day' +
+      '&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto';
     debug('fetchWeather requesting:', url);
     req.open('GET', url, true);
     req.onload = function () {
@@ -70,6 +73,13 @@ var Weather = function(pebble){
             'AppKeyWeatherIcon': icon,
             'AppKeyWeatherTemperature': temperature
           };
+          var daily = response.daily;
+          if (daily && daily.temperature_2m_max && daily.temperature_2m_max.length &&
+              daily.temperature_2m_min && daily.temperature_2m_min.length) {
+            // Sent as a pair; the watch only shows the range when it has both.
+            data['AppKeyWeatherHigh'] = Math.round(daily.temperature_2m_max[0]);
+            data['AppKeyWeatherLow'] = Math.round(daily.temperature_2m_min[0]);
+          }
           debug('fetchWeather success, sending:', data);
           Pebble.sendAppMessage(data);
         } else {

@@ -47,7 +47,7 @@ static GRect rect_translate(const GRect rect, const int x, const int y){
   return (GRect) { .origin = GPoint(origin.x + x, origin.y + y), .size = rect.size };
 }
 
-static bool segment_intersect_with_position(const Segment segment, const Position position){
+static bool segment_intersect_with_position(const Segment segment, const Position position, const int extra_height){
   GPoint center;
   if(position == North){
     center = NORTH_INFO_CENTER;
@@ -58,7 +58,10 @@ static bool segment_intersect_with_position(const Segment segment, const Positio
   }else{
     center = WEST_INFO_CENTER;
   }
-  const GRect rect = grect_from_center_and_size(center, BLOCK_SIZE);
+  // A block with a second line is centered on the same point but is taller, so
+  // the hands have to dodge the whole pair.
+  const GSize block_size = GSize(BLOCK_SIZE.w, BLOCK_SIZE.h + extra_height);
+  const GRect rect = grect_from_center_and_size(center, block_size);
   return intersect(segment, rect_translate(rect, 0, 4));
 }
 
@@ -105,19 +108,20 @@ static bool quadrants_takeover_quadrant(Quadrants * const quadrants, const Index
   return true;
 }
 
-static bool time_intersect_with_position(Quadrants * const quadrants, const tm * const time, const Position pos){
+static bool time_intersect_with_position(Quadrants * const quadrants, const tm * const time, const Position pos, const int extra_height){
   const GPoint center = quadrants->center;
   const int hour_handle = angle_hour(time, true);
   const Segment hour_hand = SEGMENT(quadrants->center, gpoint_on_circle(center, hour_handle, quadrants->hour_hand_radius));
   const int minute_angle = angle_minute(time);
   const Segment minute_hand = SEGMENT(quadrants->center, gpoint_on_circle(center, minute_angle, quadrants->minute_hand_radius));
-  return segment_intersect_with_position(hour_hand, pos) || segment_intersect_with_position(minute_hand, pos);
+  return segment_intersect_with_position(hour_hand, pos, extra_height) || segment_intersect_with_position(minute_hand, pos, extra_height);
 }
 
 static bool quadrants_try_takeover_quadrant_in_order(Quadrants * const quadrants, const Index index, const tm * const time, const Position intersect_positions[POSTIONS_COUNT], const bool check_intersect){
+  const int extra_height = index < quadrants->size ? text_block_sub_height(BLOCK(quadrants, index)) : 0;
   for(int index_pos=0; index_pos<POSTIONS_COUNT; index_pos++){
     const Position pos = intersect_positions[index_pos];
-    if(check_intersect && time_intersect_with_position(quadrants, time, pos)){
+    if(check_intersect && time_intersect_with_position(quadrants, time, pos, extra_height)){
       continue;
     }
     if(quadrants_takeover_quadrant(quadrants, index, pos)){

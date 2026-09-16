@@ -33,7 +33,9 @@ typedef enum {
   AppKeyMilitaryTime,
   AppKeyHealthEnabled,
   AppKeyBatteryDisplayedAt,
-  AppKeyQuietTimeVisible
+  AppKeyQuietTimeVisible,
+  AppKeyWeatherHigh,
+  AppKeyWeatherLow
 } AppKey;
 
 typedef enum {
@@ -41,10 +43,15 @@ typedef enum {
   PersistKeyWeather
 } PersistKey;
 
+// Appended fields stay at the end: a blob persisted by an older version is
+// shorter, so persist_read_data leaves has_range (and the range itself) zeroed.
 typedef struct {
   int32_t timestamp;
   int8_t icon;
   int8_t temperature;
+  int8_t high;
+  int8_t low;
+  uint8_t has_range;
 } __attribute__((__packed__)) Weather;
 
 typedef struct {
@@ -94,6 +101,9 @@ static int s_weather_request_timeout;
 static int s_js_ready;
 
 static GFont s_font;
+#ifdef HIGH_DPI_INFO
+static GFont s_sub_font;
+#endif
 
 static tm * s_current_time;
 
@@ -214,6 +224,16 @@ static void weather_requested_callback(DictionaryIterator * iter, Tuple * tuple)
     s_context.weather.timestamp = time(NULL);
     s_context.weather.icon = icon_tuple->value->int8;
     s_context.weather.temperature = temp_tuple->value->int8;
+    // The daily forecast is a separate Open-Meteo field and can be missing
+    // (older phone app, trimmed response); the block then shows just the
+    // current temperature, as before.
+    const Tuple * const high_tuple = dict_find(iter, AppKeyWeatherHigh);
+    const Tuple * const low_tuple = dict_find(iter, AppKeyWeatherLow);
+    s_context.weather.has_range = high_tuple && low_tuple;
+    if(s_context.weather.has_range){
+      s_context.weather.high = high_tuple->value->int8;
+      s_context.weather.low = low_tuple->value->int8;
+    }
   }
   persist_write_data(PersistKeyWeather, &s_context.weather, sizeof(Weather));
   text_block_mark_dirty(s_weather_info);
@@ -360,6 +380,19 @@ static void date_info_update_proc(TextBlock * block){
     char buffer[] = "00";
     snprintf(buffer, sizeof(buffer), "%d", context->time->tm_mday);
     text_block_set_text(block, buffer, date_color);
+#ifdef HIGH_DPI_INFO
+    // Nupe has no alphabet (its letters are the weather/status icons), so the
+    // weekday is the one piece of text on the face that has to come from a
+    // system font.
+    char weekday_buffer[8] = {0};
+    strftime(weekday_buffer, sizeof(weekday_buffer), "%a", context->time);
+    for(char * c = weekday_buffer; *c != '\0'; c++){
+      if(*c >= 'a' && *c <= 'z'){
+        *c -= 'a' - 'A';
+      }
+    }
+    text_block_set_sub_text(block, weekday_buffer, date_color);
+#endif
   }
 }
 
@@ -426,12 +459,27 @@ static void tick_layer_update_callback(Layer *layer, GContext *graphic_ctx) {
 
 // Weather
 
+static int converted_temperature(const Config * const config, const int celsius){
+  const bool is_farhrenheit = config_get_int(config, ConfigKeyTemperatureUnit) == Fahrenheit;
+  return is_farhrenheit ? celsius * 9 / 5 + 32 : celsius;
+}
+
 static void weather_info_update_proc(TextBlock * block){
   char info_buffer[10] = {0};
+#ifdef HIGH_DPI_INFO
+  // Today's low and high, as "12 24". Nupe has no "/" glyph and a hyphen
+  // separator is unreadable against negative temperatures ("-18 -4"), so the
+  // two numbers are spaced apart. The degree sign is left to the current
+  // temperature above them.
+  char range_buffer[12] = {0};
+#endif
 #ifdef SCREENSHOT
   // Render mock weather (icon 'a', -12°) so the block appears in screenshots,
   // bypassing the received-weather validity/timeout check.
   snprintf(info_buffer, sizeof(info_buffer), "%c%d°", 'a', -12);
+#ifdef HIGH_DPI_INFO
+  snprintf(range_buffer, sizeof(range_buffer), "%d %d", -18, -4);
+#endif
 #else
   const Context * const context = (Context *) text_block_get_context(block);
   const Config * const config = context->config;
@@ -440,14 +488,21 @@ static void weather_info_update_proc(TextBlock * block){
   const int expiration =  weather.timestamp + timeout;
   const bool weather_valid = time(NULL) < expiration;
   if(weather_valid){
-    const int temp = weather.temperature;
-    const bool is_farhrenheit = config_get_int(config, ConfigKeyTemperatureUnit) == Fahrenheit;
-    const int converted_temp = is_farhrenheit ? temp * 9 / 5 + 32 : temp;
-    snprintf(info_buffer, sizeof(info_buffer), "%c%d°", weather.icon, converted_temp);
+    snprintf(info_buffer, sizeof(info_buffer), "%c%d°", weather.icon, converted_temperature(config, weather.temperature));
+#ifdef HIGH_DPI_INFO
+    if(weather.has_range){
+      snprintf(range_buffer, sizeof(range_buffer), "%d %d",
+               converted_temperature(config, weather.low),
+               converted_temperature(config, weather.high));
+    }
+#endif
   }
 #endif
   const GColor info_color = config_get_color(s_config, ConfigKeyInfoColor);
   text_block_set_text(block, info_buffer, info_color);
+#ifdef HIGH_DPI_INFO
+  text_block_set_sub_text(block, range_buffer, info_color);
+#endif
 }
 
 static void send_weather_request_callback(void * context){
@@ -668,6 +723,9 @@ static void main_window_load(Window *window) {
 
   s_quadrants = quadrants_create(s_center, HOUR_HAND_RADIUS, MINUTE_HAND_RADIUS);
   s_date_info = quadrants_add_text_block(s_quadrants, s_root_layer, s_font, Low, s_current_time);
+#ifdef HIGH_DPI_INFO
+  text_block_set_sub_font(s_date_info, fonts_get_system_font(FONT_KEY_GOTHIC_14), SUB_TEXT_HEIGHT_GOTHIC_14, true);
+#endif
   text_block_set_enabled(s_date_info, config_get_bool(s_config, ConfigKeyDateDisplayed));
   text_block_set_context(s_date_info, &s_context);
   text_block_set_update_proc(s_date_info, date_info_update_proc);
@@ -684,6 +742,9 @@ static void main_window_load(Window *window) {
   fetch_step(&s_context);
 
   s_weather_info = quadrants_add_text_block(s_quadrants, s_root_layer, s_font, Head, s_current_time);
+#ifdef HIGH_DPI_INFO
+  text_block_set_sub_font(s_weather_info, s_sub_font, SUB_TEXT_HEIGHT_NUPE_18, false);
+#endif
   text_block_set_enabled(s_weather_info, config_get_bool(s_config, ConfigKeyWeatherEnabled));
   text_block_mark_dirty(s_weather_info);
   text_block_set_context(s_weather_info, &s_context);
@@ -811,6 +872,9 @@ static void init() {
 #else
   s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NUPE_23));
 #endif
+#ifdef HIGH_DPI_INFO
+  s_sub_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NUPE_18));
+#endif
   s_config = config_load(PersistKeyConfig, CONF_SIZE, CONF_DEFAULTS);
   s_context = (Context) {
     .config = s_config,
@@ -842,6 +906,9 @@ static void deinit() {
   window_destroy(s_main_window);
   s_config = config_destroy(s_config);
   fonts_unload_custom_font(s_font);
+#ifdef HIGH_DPI_INFO
+  fonts_unload_custom_font(s_sub_font);
+#endif
   s_messenger = messenger_destroy(s_messenger);
 }
 

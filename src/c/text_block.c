@@ -15,8 +15,28 @@ static void text_block_update_proc(struct Layer *layer, GContext *ctx){
     text_block->update_proc(text_block);
   }
   if(text_block_get_ready(text_block) && text_block_get_enabled(text_block)){
+    // update_proc above may have added or dropped the second line, so measure
+    // it now: with one present, both lines straddle the block's center.
+    const int sub_height = text_block_sub_height(text_block);
+    GRect frame = text_block->frame;
+#ifdef HIGH_DPI_INFO
+    frame.origin.y += text_block->sub_above ? sub_height / 2 : -sub_height / 2;
+#endif
     graphics_context_set_text_color(ctx, text_block->color);
-    graphics_draw_text(ctx, text_block->text, text_block->font, text_block->frame, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    graphics_draw_text(ctx, text_block->text, text_block->font, frame, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+#ifdef HIGH_DPI_INFO
+    if(sub_height > 0){
+      const int sub_y = text_block->sub_above
+        ? frame.origin.y - sub_height + SUB_TEXT_LEADING
+        : frame.origin.y + frame.size.h - SUB_TEXT_LEADING;
+      const GRect sub_frame = GRect(frame.origin.x,
+                                    sub_y,
+                                    frame.size.w,
+                                    sub_height + SUB_TEXT_LEADING);
+      graphics_context_set_text_color(ctx, text_block->sub_color);
+      graphics_draw_text(ctx, text_block->sub_text, text_block->sub_font, sub_frame, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
+    }
+#endif
   }
   text_block->updating = false;
 }
@@ -61,6 +81,30 @@ void text_block_set_text(TextBlock * text_block, const char * text, const GColor
   text_block->text[sizeof(text_block->text) - 1] = '\0';
   text_block->color = color;
   text_block_mark_dirty(text_block);
+}
+
+#ifdef HIGH_DPI_INFO
+void text_block_set_sub_font(TextBlock * text_block, const GFont font, const int height, const bool above){
+  text_block->sub_font = font;
+  text_block->sub_height = height;
+  text_block->sub_above = above;
+}
+
+void text_block_set_sub_text(TextBlock * text_block, const char * text, const GColor color){
+  strncpy(text_block->sub_text, text, sizeof(text_block->sub_text) - 1);
+  text_block->sub_text[sizeof(text_block->sub_text) - 1] = '\0';
+  text_block->sub_color = color;
+  text_block_mark_dirty(text_block);
+}
+#endif
+
+int text_block_sub_height(const TextBlock * const text_block){
+#ifdef HIGH_DPI_INFO
+  if(text_block->sub_font != NULL && strlen(text_block->sub_text) != 0){
+    return text_block->sub_height;
+  }
+#endif
+  return 0;
 }
 
 void text_block_set_visible(TextBlock * text_block, const bool visible){
