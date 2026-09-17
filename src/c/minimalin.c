@@ -747,7 +747,7 @@ static void main_window_load(Window *window) {
   s_quadrants = quadrants_create(s_center, HOUR_HAND_RADIUS, MINUTE_HAND_RADIUS);
   s_date_info = quadrants_add_text_block(s_quadrants, s_root_layer, s_font, Low, s_current_time);
 #ifdef HIGH_DPI_INFO
-  text_block_set_sub_font(s_date_info, fonts_get_system_font(FONT_KEY_GOTHIC_14), SUB_TEXT_HEIGHT_GOTHIC_14, true);
+  text_block_set_sub_font(s_date_info, fonts_get_system_font(FONT_KEY_GOTHIC_14), SUB_TEXT_HEIGHT_GOTHIC_14, SUB_TEXT_PULL_GOTHIC_14, true);
 #endif
   text_block_set_enabled(s_date_info, config_get_bool(s_config, ConfigKeyDateDisplayed));
   text_block_set_context(s_date_info, &s_context);
@@ -766,7 +766,7 @@ static void main_window_load(Window *window) {
 
   s_weather_info = quadrants_add_text_block(s_quadrants, s_root_layer, s_font, Head, s_current_time);
 #ifdef HIGH_DPI_INFO
-  text_block_set_sub_font(s_weather_info, s_sub_font, SUB_TEXT_HEIGHT_NUPE_18, false);
+  text_block_set_sub_font(s_weather_info, s_sub_font, SUB_TEXT_HEIGHT_NUPE_18, SUB_TEXT_PULL_NUPE_18, false);
 #endif
   text_block_set_enabled(s_weather_info, config_get_bool(s_config, ConfigKeyWeatherEnabled));
   text_block_mark_dirty(s_weather_info);

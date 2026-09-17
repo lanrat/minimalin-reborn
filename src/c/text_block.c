@@ -27,12 +27,12 @@ static void text_block_update_proc(struct Layer *layer, GContext *ctx){
 #ifdef HIGH_DPI_INFO
     if(sub_height > 0){
       const int sub_y = text_block->sub_above
-        ? frame.origin.y - sub_height + SUB_TEXT_LEADING
-        : frame.origin.y + frame.size.h - SUB_TEXT_LEADING;
+        ? frame.origin.y - sub_height + text_block->sub_pull
+        : frame.origin.y + frame.size.h - text_block->sub_pull;
       const GRect sub_frame = GRect(frame.origin.x,
                                     sub_y,
                                     frame.size.w,
-                                    sub_height + SUB_TEXT_LEADING);
+                                    sub_height + SUB_TEXT_SLACK);
       graphics_context_set_text_color(ctx, text_block->sub_color);
       graphics_draw_text(ctx, text_block->sub_text, text_block->sub_font, sub_frame, GTextOverflowModeWordWrap, GTextAlignmentCenter, NULL);
     }
@@ -84,9 +84,10 @@ void text_block_set_text(TextBlock * text_block, const char * text, const GColor
 }
 
 #ifdef HIGH_DPI_INFO
-void text_block_set_sub_font(TextBlock * text_block, const GFont font, const int height, const bool above){
+void text_block_set_sub_font(TextBlock * text_block, const GFont font, const int height, const int pull, const bool above){
   text_block->sub_font = font;
   text_block->sub_height = height;
+  text_block->sub_pull = pull;
   text_block->sub_above = above;
 }
 

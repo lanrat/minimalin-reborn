@@ -33,9 +33,15 @@
 // Nupe carries no alphabet.
   #define SUB_TEXT_HEIGHT_NUPE_18 16
   #define SUB_TEXT_HEIGHT_GOTHIC_14 16
-// Both fonts leave leading above their glyphs, so the second line is pulled
-// toward the main one to keep the pair visually joined.
-  #define SUB_TEXT_LEADING 5
+// Pixels the second line is pulled toward the main text, tuned per font so the
+// visible ink-to-ink gap comes out the same in both blocks (7px, measured on
+// gabbro): Gothic 14 sits low inside its box and needs pulling up, Nupe 18 sits
+// high in its own and needs pushing down.
+  #define SUB_TEXT_PULL_GOTHIC_14 5
+  #define SUB_TEXT_PULL_NUPE_18 -1
+// Slack below the second line's box, so its frame never clips a glyph whatever
+// the pull is.
+  #define SUB_TEXT_SLACK 5
 #endif
 
 typedef struct TextBlock TextBlock;
@@ -57,6 +63,7 @@ struct TextBlock {
   GFont sub_font;
   GColor sub_color;
   uint8_t sub_height;
+  int8_t sub_pull;
   bool sub_above;
   char sub_text[12];
 #endif
@@ -78,7 +85,7 @@ void * text_block_get_context(const TextBlock * const text_block);
 void text_block_mark_dirty(TextBlock * text_block);
 void text_block_set_update_proc(TextBlock * text_block, TextBlockUpdateProc update_proc);
 #ifdef HIGH_DPI_INFO
-void text_block_set_sub_font(TextBlock * text_block, const GFont font, const int height, const bool above);
+void text_block_set_sub_font(TextBlock * text_block, const GFont font, const int height, const int pull, const bool above);
 void text_block_set_sub_text(TextBlock * text_block, const char * text, const GColor color);
 #endif
 // Height the second line adds to the block, 0 when there is none. The quadrant
