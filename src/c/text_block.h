@@ -37,8 +37,9 @@
 // visible ink-to-ink gap comes out the same in both blocks (7px, measured on
 // gabbro): Gothic 14 sits low inside its box and needs pulling up, Nupe 18 sits
 // high in its own and needs pushing down.
-  #define SUB_TEXT_PULL_GOTHIC_14 5
-  #define SUB_TEXT_PULL_NUPE_18 -1
+  #define SUB_TEXT_PULL_GOTHIC_14_ABOVE 5
+  #define SUB_TEXT_PULL_GOTHIC_14_BELOW -1
+  #define SUB_TEXT_PULL_NUPE_18_BELOW -1
 // Slack below the second line's box, so its frame never clips a glyph whatever
 // the pull is.
   #define SUB_TEXT_SLACK 5

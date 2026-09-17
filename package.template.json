@@ -17,6 +17,7 @@
       "AppKeyBatteryDisplayedAt": 20,
       "AppKeyBluetoothIcon": 3,
       "AppKeyConfig": 11,
+      "AppKeyDistanceUnit": 25,
       "AppKeyExtraDetail": 24,
       "AppKeyDateDisplayed": 2,
       "AppKeyHealthEnabled": 19,

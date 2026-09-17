@@ -2,6 +2,7 @@
 
 typedef enum { NoIcon = 0, Bluetooth , Heart } BluetoothIcon;
 typedef enum { Celsius = 0, Fahrenheit } TemperatureUnit;
+typedef enum { Kilometers = 0, Miles } DistanceUnit;
 
 typedef enum {
   ConfigKeyMinuteHandColor = 0,
@@ -21,10 +22,11 @@ typedef enum {
   ConfigKeyHealthEnabled,
   ConfigKeyBatteryDisplayedAt,
   ConfigKeyQuietTimeVisible,
-  ConfigKeyExtraDetail
+  ConfigKeyExtraDetail,
+  ConfigKeyDistanceUnit
 } ConfigKey;
 
-#define CONF_SIZE 18
+#define CONF_SIZE 19
 
 
 #ifndef CONFIG_BLUETOOTH_ICON
@@ -32,6 +34,9 @@ typedef enum {
 #endif
 #ifndef CONFIG_TEMPERATURE_UNIT
   #define CONFIG_TEMPERATURE_UNIT Celsius
+#endif
+#ifndef CONFIG_DISTANCE_UNIT
+  #define CONFIG_DISTANCE_UNIT Kilometers
 #endif
 #ifndef CONFIG_DATE_DISPLAYED
   #define CONFIG_DATE_DISPLAYED true
@@ -64,7 +69,9 @@ ConfValue CONF_DEFAULTS[CONF_SIZE] = {
   { .key = ConfigKeyHealthEnabled, .type = BoolConf, .value = { .boolean = false } },
   { .key = ConfigKeyBatteryDisplayedAt, .type = IntConf, .value = { .integer = -1 } },
   { .key = ConfigKeyQuietTimeVisible, .type = BoolConf, .value = { .boolean = true } },
-  // Stays last: config_load fills entries past the end of a shorter persisted
-  // blob from the defaults, so appending is what keeps existing watches working.
-  { .key = ConfigKeyExtraDetail, .type = BoolConf, .value = { .boolean = true } }
+  // These stay last: config_load fills entries past the end of a shorter
+  // persisted blob from the defaults, so appending is what keeps existing
+  // watches working.
+  { .key = ConfigKeyExtraDetail, .type = BoolConf, .value = { .boolean = true } },
+  { .key = ConfigKeyDistanceUnit, .type = IntConf, .value = { .integer = CONFIG_DISTANCE_UNIT } }
 };

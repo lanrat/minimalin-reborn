@@ -156,7 +156,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
       vibrate_on_the_hour: 'AppKeyVibrateOnTheHour',
       military_time: 'AppKeyMilitaryTime',
       quiet_time_visible: 'AppKeyQuietTimeVisible',
-      extra_detail: 'AppKeyExtraDetail'
+      extra_detail: 'AppKeyExtraDetail',
+      distance_unit: 'AppKeyDistanceUnit'
     };
     var dict = { AppKeyConfig: 1 };
     for(var key in mapping){

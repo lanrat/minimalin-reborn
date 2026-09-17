@@ -33,6 +33,7 @@ def configure(ctx):
     fetch_conf(ctx, 'CONFIG_RAINBOW_MODE')
     fetch_conf(ctx, 'CONFIG_WEATHER_ENABLED')
     fetch_conf(ctx, 'CONFIG_TEMPERATURE_UNIT')
+    fetch_conf(ctx, 'CONFIG_DISTANCE_UNIT')
     fetch_conf(ctx, 'CONFIG_MILITARY_TIME')
 
     ctx.load('pebble_sdk')

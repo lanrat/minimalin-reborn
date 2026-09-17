@@ -36,7 +36,8 @@ typedef enum {
   AppKeyQuietTimeVisible,
   AppKeyWeatherHigh,
   AppKeyWeatherLow,
-  AppKeyExtraDetail
+  AppKeyExtraDetail,
+  AppKeyDistanceUnit
 } AppKey;
 
 typedef enum {
@@ -60,6 +61,7 @@ typedef struct {
   Weather weather;
   bool reset_weather;
   int steps;
+  int distance_meters;
   bool bluetooth_connected;
   BatteryChargeState charge_state;
   tm * time;
@@ -110,7 +112,7 @@ static tm * s_current_time;
 
 static void schedule_weather_request(int timeout);
 static void mark_dirty_minute_hand_layer();
-static void fetch_step(Context * const context);
+static void fetch_health(Context * const context);
 static void update_watch_info_layer_visibility();
 
 static void update_current_time() {
@@ -156,6 +158,13 @@ static void config_temperature_unit_updated(DictionaryIterator * iter, Tuple * t
   config_set_int(s_config, ConfigKeyTemperatureUnit, tuple->value->int32);
   text_block_mark_dirty(s_weather_info);
 }
+
+#ifdef HIGH_DPI_INFO
+static void config_distance_unit_updated(DictionaryIterator * iter, Tuple * tuple){
+  config_set_int(s_config, ConfigKeyDistanceUnit, tuple->value->int32);
+  text_block_mark_dirty(s_steps_info);
+}
+#endif
 
 static void config_bluetooth_icon_updated(DictionaryIterator * iter, Tuple * tuple){
   config_set_int(s_config, ConfigKeyBluetoothIcon, tuple->value->int32);
@@ -214,7 +223,7 @@ static void config_health_enabled_updated(DictionaryIterator * iter, Tuple * tup
   const bool enabled = tuple->value->int8;
   config_set_bool(s_config, ConfigKeyHealthEnabled, enabled);
   if(enabled){
-    fetch_step(&s_context);
+    fetch_health(&s_context);
   }
 #ifndef SCREENSHOT
   // In a SCREENSHOT build the steps block is force-enabled at load; don't let a
@@ -623,11 +632,32 @@ static void steps_info_update_proc(TextBlock * block){
     snprintf(step_text, sizeof(step_text), "y%d", steps);
   }
   text_block_set_text(block, step_text, info_color);
+#ifdef HIGH_DPI_INFO
+  // Distance walked today, under the step count. "km" and "mi" are letters, so
+  // like the weekday this line is system Gothic rather than Nupe.
+  char distance_text[12] = {0};
+  if(config_get_bool(config, ConfigKeyExtraDetail)){
+#ifdef SCREENSHOT
+    const int meters = 4823;  // mock distance renders as "4.8 km"
+#else
+    const int meters = context->distance_meters;
+#endif
+    const bool in_miles = config_get_int(config, ConfigKeyDistanceUnit) == Miles;
+    // Tenths in integer math, rounded rather than truncated: half a unit is
+    // added before the divide, so 4823m reads 3.0 mi and not 2.9. Distances are
+    // never negative, so the rounding needs no sign handling. Using 1609 rather
+    // than 1609.344 costs a tenth only past 700 miles walked in one day.
+    const int tenths = in_miles ? (meters * 10 + 804) / 1609 : (meters + 50) / 100;
+    snprintf(distance_text, sizeof(distance_text), "%d.%d %s", tenths / 10, tenths % 10, in_miles ? "mi" : "km");
+  }
+  text_block_set_sub_text(block, distance_text, info_color);
+#endif
 }
 
-static void fetch_step(Context * const context){
+static void fetch_health(Context * const context){
   if(config_get_bool(context->config, ConfigKeyHealthEnabled)){
     context->steps = (int)health_service_sum_today(HealthMetricStepCount);
+    context->distance_meters = (int)health_service_sum_today(HealthMetricWalkedDistanceMeters);
   }
 }
 
@@ -664,7 +694,7 @@ static void battery_handler(BatteryChargeState charge){
 
 static void step_handler(HealthEventType event, void * context){
   if(event == HealthEventSignificantUpdate){
-    fetch_step((Context *)context);
+    fetch_health((Context *)context);
     text_block_mark_dirty(s_steps_info);
   }
 }
@@ -682,7 +712,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed){
   }
   schedule_weather_request(10000);
   update_current_time();
-  fetch_step(&s_context);
+  fetch_health(&s_context);
 
   layer_mark_dirty(s_hour_hand_layer);
   layer_mark_dirty(s_tick_layer);
@@ -749,7 +779,7 @@ static void main_window_load(Window *window) {
   s_quadrants = quadrants_create(s_center, HOUR_HAND_RADIUS, MINUTE_HAND_RADIUS);
   s_date_info = quadrants_add_text_block(s_quadrants, s_root_layer, s_font, Low, s_current_time);
 #ifdef HIGH_DPI_INFO
-  text_block_set_sub_font(s_date_info, fonts_get_system_font(FONT_KEY_GOTHIC_14), SUB_TEXT_HEIGHT_GOTHIC_14, SUB_TEXT_PULL_GOTHIC_14, true);
+  text_block_set_sub_font(s_date_info, fonts_get_system_font(FONT_KEY_GOTHIC_14), SUB_TEXT_HEIGHT_GOTHIC_14, SUB_TEXT_PULL_GOTHIC_14_ABOVE, true);
 #endif
   text_block_set_enabled(s_date_info, config_get_bool(s_config, ConfigKeyDateDisplayed));
   text_block_set_context(s_date_info, &s_context);
@@ -761,14 +791,17 @@ static void main_window_load(Window *window) {
 #else
   text_block_set_enabled(s_steps_info, config_get_bool(s_config, ConfigKeyHealthEnabled));
 #endif
+#ifdef HIGH_DPI_INFO
+  text_block_set_sub_font(s_steps_info, fonts_get_system_font(FONT_KEY_GOTHIC_14), SUB_TEXT_HEIGHT_GOTHIC_14, SUB_TEXT_PULL_GOTHIC_14_BELOW, false);
+#endif
   text_block_set_context(s_steps_info, &s_context);
   text_block_set_update_proc(s_steps_info, steps_info_update_proc);
   health_service_events_subscribe(step_handler, &s_context);
-  fetch_step(&s_context);
+  fetch_health(&s_context);
 
   s_weather_info = quadrants_add_text_block(s_quadrants, s_root_layer, s_font, Head, s_current_time);
 #ifdef HIGH_DPI_INFO
-  text_block_set_sub_font(s_weather_info, s_sub_font, SUB_TEXT_HEIGHT_NUPE_18, SUB_TEXT_PULL_NUPE_18, false);
+  text_block_set_sub_font(s_weather_info, s_sub_font, SUB_TEXT_HEIGHT_NUPE_18, SUB_TEXT_PULL_NUPE_18_BELOW, false);
 #endif
   text_block_set_enabled(s_weather_info, config_get_bool(s_config, ConfigKeyWeatherEnabled));
   text_block_mark_dirty(s_weather_info);
@@ -887,7 +920,8 @@ static void init() {
     { AppKeyHealthEnabled, config_health_enabled_updated },
     { AppKeyBatteryDisplayedAt, config_battery_displayed_at_updated },
 #ifdef HIGH_DPI_INFO
-    { AppKeyExtraDetail, config_extra_detail_updated }
+    { AppKeyExtraDetail, config_extra_detail_updated },
+    { AppKeyDistanceUnit, config_distance_unit_updated }
 #endif
   };
   s_messenger = messenger_create(ARRAY_LENGTH(messages), messenger_callback, messages);
