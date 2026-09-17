@@ -65,7 +65,7 @@ struct TextBlock {
   uint8_t sub_height;
   int8_t sub_pull;
   bool sub_above;
-  char sub_text[12];
+  char sub_text[16];  // "-58° 122°" is 11 bytes: the degree sign is 2 in UTF-8
 #endif
 };
 

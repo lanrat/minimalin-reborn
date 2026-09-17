@@ -483,11 +483,13 @@ static int converted_temperature(const Config * const config, const int celsius)
 static void weather_info_update_proc(TextBlock * block){
   char info_buffer[10] = {0};
 #ifdef HIGH_DPI_INFO
-  // Today's low and high, as "12 24". Nupe has no "/" glyph and a hyphen
-  // separator is unreadable against negative temperatures ("-18 -4"), so the
-  // two numbers are spaced apart. The degree sign is left to the current
-  // temperature above them.
-  char range_buffer[12] = {0};
+  // Today's low and high, as "12° 24°". Nupe has no "/" glyph, a hyphen
+  // separator is unreadable against negative temperatures ("-18--4"), and a
+  // lone space is one digit wide, so "12 24" reads as one number. Carrying the
+  // degree sign on both marks them as temperatures rather than any other pair.
+  // Two degree signs are 2 bytes each in UTF-8: "-58° 122°" is 11 bytes plus
+  // the terminator, so 16 leaves room for any pair the conversion can produce.
+  char range_buffer[16] = {0};
   const bool extra_detail = config_get_bool(s_config, ConfigKeyExtraDetail);
 #endif
 #ifdef SCREENSHOT
@@ -496,7 +498,7 @@ static void weather_info_update_proc(TextBlock * block){
   snprintf(info_buffer, sizeof(info_buffer), "%c%d°", 'a', -12);
 #ifdef HIGH_DPI_INFO
   if(extra_detail){
-    snprintf(range_buffer, sizeof(range_buffer), "%d %d", -18, -4);
+    snprintf(range_buffer, sizeof(range_buffer), "%d° %d°", -18, -4);
   }
 #endif
 #else
@@ -510,7 +512,7 @@ static void weather_info_update_proc(TextBlock * block){
     snprintf(info_buffer, sizeof(info_buffer), "%c%d°", weather.icon, converted_temperature(config, weather.temperature));
 #ifdef HIGH_DPI_INFO
     if(extra_detail && weather.has_range){
-      snprintf(range_buffer, sizeof(range_buffer), "%d %d",
+      snprintf(range_buffer, sizeof(range_buffer), "%d° %d°",
                converted_temperature(config, weather.low),
                converted_temperature(config, weather.high));
     }

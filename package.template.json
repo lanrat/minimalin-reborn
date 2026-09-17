@@ -60,7 +60,7 @@
           "type": "font"
         },
         {
-          "characterRegex": "[0-9 \\-]",
+          "characterRegex": "[0-9 °\\-]",
           "file": "fonts/nupe.ttf",
           "name": "FONT_NUPE_18",
           "targetPlatforms": [
