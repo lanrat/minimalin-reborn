@@ -45,6 +45,19 @@ This way we'll be able to discuss the idea and see if it matches our vision befo
 
 ## Development
 
+### Building
+
+```bash
+make build   # release build
+make debug   # same, with JS debug logging
+```
+
+`package.json` is **generated**, not tracked: `make` writes it from
+`package.template.json` and fills in the version from the latest git tag. Edit
+`package.template.json` for anything else (message keys, resources, capabilities).
+Running `pebble build` on a fresh clone fails until `make build` (or `make
+set-version`) has created `package.json` at least once.
+
 ### Creating a Release
 
 To create a new tagged GitHub release:
@@ -52,21 +65,14 @@ To create a new tagged GitHub release:
 **Important**: Pebble apps require versions in `X.Y` format (patch must be 0). Use minor version bumps only.
 
 ```bash
-# 1. Update version in package.json (e.g., 2.1 → 2.2)
-# Make sure patch version is always .0
+# 1. Commit your changes. There is no version to bump by hand — the tag is the
+#    version, and the build reads it from `git describe`.
 
-# 2. Build to verify
-make build
-
-# 3. Commit the version bump
-git add .
-git commit -m "Bump version to X.Y"
-
-# 4. Create and push the tag
+# 2. Create and push the tag
 git tag -a vX.Y
 git push --tags
 
-# The GitHub Action will automatically build and create the release with the .pbw file
+# The GitHub Action builds from the tag, so the released .pbw carries X.Y.0
 ```
 
 ### Appstore publishing secrets

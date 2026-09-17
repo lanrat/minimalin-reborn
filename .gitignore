@@ -8,3 +8,8 @@ resources/data/
 
 # Generated config files
 src/pkjs/build_config.js
+
+# Generated from package.template.json by `make`, with the version taken from
+# the latest git tag. Tracking it would always record a stale version, since
+# the tag is created after the commit.
+package.json
