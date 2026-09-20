@@ -33,10 +33,10 @@ typedef enum {
   #define CONFIG_BLUETOOTH_ICON Bluetooth
 #endif
 #ifndef CONFIG_TEMPERATURE_UNIT
-  #define CONFIG_TEMPERATURE_UNIT Celsius
+  #define CONFIG_TEMPERATURE_UNIT Fahrenheit
 #endif
 #ifndef CONFIG_DISTANCE_UNIT
-  #define CONFIG_DISTANCE_UNIT Kilometers
+  #define CONFIG_DISTANCE_UNIT Miles
 #endif
 #ifndef CONFIG_DATE_DISPLAYED
   #define CONFIG_DATE_DISPLAYED true

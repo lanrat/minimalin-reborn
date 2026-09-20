@@ -121,6 +121,56 @@ static void update_current_time() {
   s_context.time = s_current_time;
 }
 
+#ifdef SCREENSHOT
+// Screenshot mocks for the watch info block. The glyphs are keyed to the
+// emulator clock, which scripts/screenshots.sh steps to a different time for
+// every shot, so the battery and quiet time icons each land in exactly one
+// screenshot per platform instead of all of them. The Bluetooth glyph never
+// shows: it means a disconnected watch, which is not what the screenshots
+// should advertise. Both times below have to be on the sweep's grid (every
+// fourth hour, every tenth minute) or the glyph appears in no screenshot.
+#define SCREENSHOT_BATTERY_HOUR 8
+#define SCREENSHOT_BATTERY_MINUTE 20
+#define SCREENSHOT_QUIET_HOUR 21
+#define SCREENSHOT_QUIET_MINUTE 25
+
+static bool screenshot_time_is(const int hour, const int minute){
+  return s_current_time && s_current_time->tm_hour == hour && s_current_time->tm_min == minute;
+}
+
+static bool screenshot_battery_visible(){
+  return screenshot_time_is(SCREENSHOT_BATTERY_HOUR, SCREENSHOT_BATTERY_MINUTE);
+}
+
+static bool screenshot_quiet_time_visible(){
+  return screenshot_time_is(SCREENSHOT_QUIET_HOUR, SCREENSHOT_QUIET_MINUTE);
+}
+
+// Hand colors, keyed to the clock like the glyphs. Two of the five shots the
+// sweep takes keep the stock red-on-white hands; the others advertise what the
+// config page can do. Color platforms only: on B&W the hands are white whatever
+// the config holds, and an arbitrary hex would quantize to black and vanish.
+static void screenshot_apply_theme(){
+#ifdef PBL_COLOR
+  uint32_t hour_hand = 0xff0000;
+  uint32_t minute_hand = 0xffffff;
+  bool rainbow = false;
+  if(screenshot_time_is(16, 35)){
+    hour_hand = 0x00aaff;
+  }else if(screenshot_time_is(SCREENSHOT_QUIET_HOUR, SCREENSHOT_QUIET_MINUTE)){
+    rainbow = true;
+  }else if(screenshot_time_is(1, 5)){
+    hour_hand = 0xffaa00;
+  }
+  // Set on every tick rather than only on the themed shots, so the previous
+  // shot's colors never carry over.
+  config_set_int(s_config, ConfigKeyHourHandColor, hour_hand);
+  config_set_int(s_config, ConfigKeyMinuteHandColor, minute_hand);
+  config_set_bool(s_config, ConfigKeyRainbowMode, rainbow);
+#endif
+}
+#endif
+
 // Messenger
 
 static void config_info_color_updated(DictionaryIterator * iter, Tuple * tuple){
@@ -502,12 +552,19 @@ static void weather_info_update_proc(TextBlock * block){
   const bool extra_detail = config_get_bool(s_config, ConfigKeyExtraDetail);
 #endif
 #ifdef SCREENSHOT
-  // Render mock weather (icon 'a', -12°) so the block appears in screenshots,
-  // bypassing the received-weather validity/timeout check.
-  snprintf(info_buffer, sizeof(info_buffer), "%c%d°", 'a', -12);
+  // Render mock weather so the block appears in screenshots, bypassing the
+  // received-weather validity/timeout check. An ordinary clear day, 18° now
+  // against a 12°/24° range, run through the unit conversion so the Fahrenheit
+  // screenshots read 64° and 54°/75° rather than the Celsius numbers. The icon
+  // follows the emulator clock: 'a' is the clear-day sun and 'A' its night
+  // counterpart (see wmoToIcon in app.js).
+  const bool daytime = s_current_time && s_current_time->tm_hour >= 6 && s_current_time->tm_hour < 18;
+  snprintf(info_buffer, sizeof(info_buffer), "%c%d°", daytime ? 'a' : 'A', converted_temperature(s_config, 18));
 #ifdef HIGH_DPI_INFO
   if(extra_detail){
-    snprintf(range_buffer, sizeof(range_buffer), "%d° %d°", -18, -4);
+    snprintf(range_buffer, sizeof(range_buffer), "%d° %d°",
+             converted_temperature(s_config, 12),
+             converted_temperature(s_config, 24));
   }
 #endif
 #else
@@ -582,7 +639,7 @@ static void watch_info_update_proc(TextBlock * block){
   char info_buffer[4] = {0};
   const BluetoothIcon bluetooth_icon = config_get_int(config, ConfigKeyBluetoothIcon);
 #ifdef SCREENSHOT
-  const bool bluetooth_disconneted = true;  // force the BT glyph on for screenshots
+  const bool bluetooth_disconneted = false;  // never show the BT glyph in screenshots
 #else
   const bool bluetooth_disconneted = !context->bluetooth_connected;
 #endif
@@ -591,7 +648,7 @@ static void watch_info_update_proc(TextBlock * block){
     strncat(info_buffer, bluetooth_icon == Bluetooth ? "z" : "Z", 2);
   }
 #ifdef SCREENSHOT
-  const bool battery_below_threshold = true;  // force the battery glyph on for screenshots
+  const bool battery_below_threshold = screenshot_battery_visible();
 #else
   const int battery_threshold = config_get_int(config, ConfigKeyBatteryDisplayedAt);
   const BatteryChargeState charge_state = context->charge_state;
@@ -601,7 +658,7 @@ static void watch_info_update_proc(TextBlock * block){
     strncat(info_buffer, "w", 2);
   }
 #ifdef SCREENSHOT
-  const bool quiet_time_visible = true;  // force the quiet-time glyph on for screenshots
+  const bool quiet_time_visible = screenshot_quiet_time_visible();
 #else
   const bool quiet_time_visible = quiet_time_is_active() && config_get_bool(config, ConfigKeyQuietTimeVisible);
 #endif
@@ -665,9 +722,10 @@ static void fetch_health(Context * const context){
 
 static void update_watch_info_layer_visibility(){
 #ifdef SCREENSHOT
-  // Keep the watch info block visible for screenshots regardless of BT/battery
-  // state (this runs at load and from the BT/battery handlers).
-  text_block_set_enabled(s_watch_info, true);
+  // Only the two shots that mock a glyph show the block at all; the rest look
+  // like a connected watch with a healthy battery and no quiet time. The tick
+  // handler calls this every minute, so the block follows the emulator clock.
+  text_block_set_enabled(s_watch_info, screenshot_battery_visible() || screenshot_quiet_time_visible());
 #else
   const Config * const config = s_context.config;
   const bool battery_icon_visible = s_context.charge_state.charge_percent < config_get_int(config, ConfigKeyBatteryDisplayedAt);
@@ -713,6 +771,9 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed){
   schedule_weather_request(10000);
   update_current_time();
   fetch_health(&s_context);
+#ifdef SCREENSHOT
+  screenshot_apply_theme();
+#endif
 
   layer_mark_dirty(s_hour_hand_layer);
   layer_mark_dirty(s_tick_layer);
@@ -774,6 +835,9 @@ static void main_window_load(Window *window) {
   s_obstruction_height = s_root_layer_bounds.size.h - layer_get_unobstructed_bounds(s_root_layer).size.h;
   s_center = grect_center_point(&s_root_layer_bounds);
   update_current_time();
+#ifdef SCREENSHOT
+  screenshot_apply_theme();
+#endif
   window_set_background_color(window, config_get_color(s_config, ConfigKeyBackgroundColor));
 
   s_quadrants = quadrants_create(s_center, HOUR_HAND_RADIUS, MINUTE_HAND_RADIUS);
@@ -938,6 +1002,12 @@ static void init() {
   s_sub_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_NUPE_18));
 #endif
   s_config = config_load(PersistKeyConfig, CONF_SIZE, CONF_DEFAULTS);
+#if defined(SCREENSHOT) && defined(HIGH_DPI_INFO)
+  // Screenshots always show the second info lines on the platforms that have
+  // them, even if the emulator's persisted config was left with Extra detail
+  // off by an earlier session.
+  config_set_bool(s_config, ConfigKeyExtraDetail, true);
+#endif
   s_context = (Context) {
     .config = s_config,
     .steps = 0,
